@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HRZ Safety Walk">
+<meta name="theme-color" content="#1E264D">
+<title>Safety Walk — HRZ Energia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:    #1E264D;
+  --navy2:   #16203E;
+  --sky:     #29A8E5;
+  --sky-10:  rgba(41,168,229,.10);
+  --sky-20:  rgba(41,168,229,.20);
+  --mid:     #235D85;
+  --green:   #00B38A;
+  --green2:  #007D58;
+  --green-10:rgba(0,179,138,.10);
+  --red:     #E53935;
+  --red-10:  rgba(229,57,53,.10);
+  --amber:   #F59E0B;
+  --amber-10:rgba(245,158,11,.10);
+  --purple:  #7C3AED;
+  --bg:      #EEF1F8;
+  --card:    #FFFFFF;
+  --border:  #DDE3EE;
+  --text:    #1E264D;
+  --muted:   #5C6B8A;
+  --r:       10px;
+  --rlg:     14px;
+  --sh:      0 1px 4px rgba(30,38,77,.07), 0 4px 16px rgba(30,38,77,.05);
+  --sh2:     0 2px 8px rgba(30,38,77,.10), 0 8px 32px rgba(30,38,77,.08);
+  --safe-t:  env(safe-area-inset-top, 0px);
+  --safe-b:  env(safe-area-inset-bottom, 0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overscroll-behavior:none;padding-bottom:calc(76px + var(--safe-b))}
+
+/* ─── BANNERS ─── */
+#offline-banner{display:none;background:var(--amber);color:#78350F;font-size:11px;font-weight:700;text-align:center;padding:calc(5px + var(--safe-t)) 16px 5px;letter-spacing:.04em}
+#offline-banner.show{display:block}
+#sync-banner{display:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;text-align:center;padding:5px 16px;animation:fout 3.5s forwards}
+#sync-banner.show{display:block}
+@keyframes fout{0%,70%{opacity:1}100%{opacity:0}}
+
+/* ─── HEADER ─── */
+.hdr{
+  background: linear-gradient(140deg, var(--navy2) 0%, var(--navy) 45%, var(--mid) 100%);
+  padding: calc(14px + var(--safe-t)) 18px 0;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 20px rgba(10,15,40,.25);
+}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:14px}
+.hdr-left{flex:1;min-width:0}
+.hdr-eyebrow{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:5px}
+.hdr h1{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15}
+.hdr .sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.hdr-logo img{height:52px;object-fit:contain;display:block}
+.btn-lang{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.8);font-family:inherit;font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;cursor:pointer;
+  transition:background .15s;
+}
+.btn-lang:hover{background:rgba(255,255,255,.18)}
+
+/* header pill tabs for quick status */
+.hdr-tabs{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none}
+.hdr-tabs::-webkit-scrollbar{display:none}
+.htab{
+  flex:1;min-width:0;padding:10px 8px;font-size:10px;font-weight:700;color:rgba(255,255,255,.45);
+  text-align:center;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;white-space:nowrap;letter-spacing:.02em;
+}
+.htab.active{color:#fff;border-bottom-color:var(--sky)}
+.htab.done{color:var(--green)}
+
+/* ─── WRAP ─── */
+.wrap{max-width:680px;margin:0 auto;padding:16px 12px 24px}
+
+/* ─── SECTION DIVIDER ─── */
+.sdiv{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+.sdiv-line{flex:1;height:1px;background:var(--border)}
+.sdiv-label{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+
+/* ─── CARD ─── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);box-shadow:var(--sh);padding:16px;margin-bottom:12px}
+
+/* ─── INFO GRID ─── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.field input{
+  height:42px;border:1.5px solid var(--border);border-radius:var(--r);
+  padding:0 12px;font-family:inherit;font-size:14px;color:var(--text);
+  background:#FAFBFD;-webkit-appearance:none;transition:border .15s,box-shadow .15s;
+}
+.field input:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px var(--sky-10)}
+.field input.invalid{border-color:var(--red)!important;background:#FEF5F5}
+.field-err{font-size:10px;color:var(--red);font-weight:600;margin-top:2px;display:none}
+.field-err.show{display:block}
+
+/* ─── SCORE CARD ─── */
+.score-card{
+  display:none;
+  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy) 60%,var(--mid) 100%);
+  border-radius:var(--rlg);padding:16px 18px;
+  flex-direction:row;align-items:center;gap:16px;
+  margin-bottom:12px;box-shadow:var(--sh2);
+  border:1px solid rgba(255,255,255,.05);
+  position:relative;overflow:hidden;
+}
+.score-card::before{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(41,168,229,.06);pointer-events:none}
+.score-card::after{content:'';position:absolute;left:-20px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(0,179,138,.04);pointer-events:none}
+.score-left{flex:1;min-width:0;position:relative;z-index:1}
+.score-eyebrow{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:4px}
+.score-title{font-size:12px;font-weight:600;color:rgba(255,255,255,.7)}
+.score-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ded-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:500;color:rgba(255,255,255,.6)}
+.ded-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.score-dial{position:relative;width:76px;height:76px;flex-shrink:0;z-index:1}
+.score-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.d-track{fill:none;stroke:rgba(255,255,255,.1);stroke-width:7}
+.d-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .55s cubic-bezier(.4,0,.2,1),stroke .3s}
+.dial-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dial-num{font-size:19px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.03em}
+.dial-pct{font-size:9px;color:rgba(255,255,255,.38);font-weight:600}
+
+/* ─── SELECTION ─── */
+.sel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+.sel-sec{padding:14px 16px}
+.sel-sec+.sel-sec{border-top:1px solid var(--border)}
+.sel-lbl{font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lvl-tabs{display:flex;gap:7px}
+.lvl{
+  flex:1;padding:9px 6px;border-radius:var(--r);border:1.5px solid var(--border);
+  cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:var(--muted);
+  text-align:center;background:#fff;line-height:1.2;-webkit-appearance:none;transition:all .15s;
+}
+.lvl .ls{font-size:9px;font-weight:400;opacity:.6;display:block;margin-top:1px}
+.lvl.active.op{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lvl.active.ta{background:var(--mid);color:#fff;border-color:var(--mid)}
+.lvl.active.li{background:var(--sky);color:#fff;border-color:var(--sky)}
+.env-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{
+  padding:8px 4px;border-radius:var(--r);border:1.5px solid var(--border);
+  cursor:pointer;font-family:inherit;font-size:10px;font-weight:600;color:var(--muted);
+  text-align:center;background:#fff;-webkit-appearance:none;transition:all .15s;line-height:1.25;
+}
+.tab:active,.tab:hover{border-color:var(--sky);color:var(--navy)}
+.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* ─── RISK LEGEND ─── */
+.risk-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);box-shadow:var(--sh);padding:14px 16px;margin-bottom:12px}
+.risk-title{font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.risk-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.risk-rows{display:flex;flex-direction:column;gap:8px}
+.risk-row{display:flex;align-items:flex-start;gap:10px}
+.rpill{flex-shrink:0;font-size:9px;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap;margin-top:2px;letter-spacing:.03em}
+.rpill.im{background:#FEE2E2;color:#991B1B}
+.rpill.se{background:#FEF3C7;color:#92400E}
+.rpill.mo{background:#DBEAFE;color:#1E40AF}
+.rpill.op{background:#EDE9FE;color:#5B21B6}
+.rdesc{font-size:11px;color:var(--muted);line-height:1.4}
+.rded{font-size:10px;font-weight:700;color:var(--text);margin-left:3px;white-space:nowrap}
+
+/* ─── PROGRESS ─── */
+.prog-card{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);box-shadow:var(--sh);padding:14px 16px;margin-bottom:12px}
+.prog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.prog-lbl{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.prog-chips{display:flex;gap:8px;flex-wrap:wrap}
+.pchip{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dg{background:var(--green)}.dr{background:var(--red)}.da{background:var(--amber)}.do{background:var(--purple)}.dx{background:#C8D0E0}
+.prog-bar{height:4px;background:var(--border);border-radius:999px;overflow:hidden}
+.prog-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--sky),var(--green));transition:width .3s}
+.prog-count{font-size:10px;font-weight:600;color:var(--muted);text-align:right;margin-top:5px}
+
+/* ─── CHECKLIST ─── */
+.cl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.cl-thead{
+  display:grid;grid-template-columns:34px 1fr 38px 38px 38px 38px 34px;
+  background:var(--navy);padding:8px 12px;
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.55);
+  align-items:center;
+}
+.cl-thead .cc{text-align:center}
+.cl-item{border-bottom:1px solid var(--border)}
+.cl-item:last-child{border-bottom:none}
+.cl-row{
+  display:grid;grid-template-columns:34px 1fr 38px 38px 38px 38px 34px;
+  padding:11px 12px;align-items:center;
+  transition:background .1s;
+}
+.cl-row:active{background:#F5F7FC}
+.cl-ref{font-family:'DM Mono',monospace;font-size:8.5px;font-weight:500;color:var(--muted);line-height:1.2}
+.cl-q{font-size:12.5px;line-height:1.45;padding-right:6px;color:var(--text)}
+.cl-chk{display:flex;justify-content:center;align-items:center}
+.cl-chk input[type="checkbox"]{
+  width:22px;height:22px;cursor:pointer;border-radius:5px;
+  border:2px solid var(--border);-webkit-appearance:none;appearance:none;
+  background:#fff;position:relative;flex-shrink:0;transition:all .15s;
+}
+.cl-chk input:checked{border-color:transparent}
+.cl-chk.cs input:checked{background:var(--green)}
+.cl-chk.cn input:checked{background:var(--red)}
+.cl-chk.ca input:checked{background:var(--amber)}
+.cl-chk.co input:checked{background:var(--purple)}
+.cl-chk input:checked::after{content:'';position:absolute;left:6px;top:2px;width:6px;height:10px;border:2.5px solid #fff;border-top:none;border-left:none;transform:rotate(45deg)}
+.btn-clip{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:none;border:none;cursor:pointer;color:var(--muted);transition:all .15s}
+.btn-clip:active{background:var(--sky-10);color:var(--sky)}
+.btn-clip.has-file{color:var(--green)}
+.btn-clip svg{width:15px;height:15px}
+.cl-sub{display:none;border-top:1px dashed var(--border);background:#FAFBFD}
+.cl-sub.open{display:block}
+.cl-sub-inner{padding:9px 12px 11px calc(34px + 12px)}
+.cl-obs{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-family:inherit;font-size:12.5px;color:var(--text);background:#fff;resize:none;min-height:36px}
+.cl-obs:focus{outline:none;border-color:var(--sky)}
+.attach-lbl{font-size:10px;color:var(--sky);font-weight:600;margin-top:5px;display:block}
+
+/* ─── ACTION PLAN ─── */
+.ap-section{display:none;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--rlg);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+.ap-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;border-bottom:1px solid var(--border)}
+.ap-hdr-l{display:flex;align-items:center;gap:8px}
+.ap-hdr h3{font-size:12.5px;font-weight:800;color:var(--text)}
+.nc-badge{background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px}
+.ap-chev{color:var(--muted);transition:transform .2s}
+.ap-chev.open{transform:rotate(180deg)}
+.ap-body{display:none;padding:12px}
+.ap-body.open{display:block}
+.ap-empty{text-align:center;color:var(--muted);font-size:12px;padding:18px 0}
+.ac{background:#FAFBFD;border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.ac:last-child{margin-bottom:0}
+.ac-ref-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
+.ac-ref{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;color:var(--muted);background:var(--border);padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.ac-q{font-size:11.5px;color:var(--muted);line-height:1.4;flex:1}
+.ac-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ac-field{display:flex;flex-direction:column;gap:3px}
+.ac-field.full{grid-column:1/-1}
+.ac-field label{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.ac-input{height:38px;border:1.5px solid var(--border);border-radius:7px;padding:0 10px;font-family:inherit;font-size:13px;color:var(--text);background:#fff;width:100%;-webkit-appearance:none}
+.ac-input:focus{outline:none;border-color:var(--sky)}
+.ac-sel{height:38px;border:1.5px solid var(--border);border-radius:7px;padding:0 10px;font-family:inherit;font-size:12.5px;color:var(--text);background:#fff;width:100%;cursor:pointer;-webkit-appearance:none}
+.ac-sel:focus{outline:none;border-color:var(--sky)}
+/* evidence row */
+.ev-row{display:flex;align-items:center;gap:8px}
+.ev-name{font-size:10px;color:var(--sky);font-weight:600}
+
+/* ─── PENDING BADGE ─── */
+.pending{display:none;align-items:center;gap:7px;background:var(--amber-10);border:1px solid var(--amber);color:#92400E;font-size:11px;font-weight:700;padding:9px 12px;border-radius:var(--r);margin-bottom:12px}
+.pending.show{display:flex}
+.pdot{width:8px;height:8px;background:var(--amber);border-radius:50%;animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ─── COMMENTS ─── */
+.gc-ta{width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;font-family:inherit;font-size:13px;color:var(--text);resize:vertical;background:#FAFBFD;-webkit-appearance:none}
+.gc-ta:focus{outline:none;border-color:var(--sky)}
+
+/* ─── BOTTOM BAR ─── */
+.bot{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:9px 12px calc(9px + var(--safe-b));display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap;z-index:300}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 15px;border-radius:var(--r);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);white-space:nowrap;-webkit-appearance:none;transition:all .15s}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+.btn-ghost{background:#fff;color:var(--muted)}
+.btn-ghost:hover{border-color:var(--navy);color:var(--navy)}
+.btn-pdf{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-pdf:hover{background:var(--navy2)}
+.btn-share{background:#fff;color:var(--muted)}
+.btn-sync{background:#fff;color:var(--sky);border-color:var(--sky);display:none}
+.btn-sync.show{display:inline-flex}
+.btn-sync.syncing svg{animation:spin 1s linear infinite}
+.btn-sync.synced{color:var(--green);border-color:var(--green)}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.btn-fin{background:linear-gradient(135deg,var(--green) 0%,var(--green2) 100%);color:#fff;border-color:var(--green);position:relative;overflow:hidden}
+.btn-fin:hover{opacity:.9}
+.btn-fin::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:shim 2s infinite}
+@keyframes shim{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:calc(72px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(8px);background:var(--navy);color:#fff;font-size:12.5px;font-weight:600;padding:9px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;white-space:nowrap;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(10,15,40,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── UTILS ─── */
+.hidden-file{display:none}
+.empty-state{padding:30px 16px;text-align:center;color:var(--muted);font-size:12px}
+
+/* ─── RESPONSIVE ─── */
+@media(min-width:480px){
+  .info-grid{grid-template-columns:repeat(3,1fr)}
+  .env-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(min-width:640px){
+  .wrap{padding:20px 18px 32px}
+  .cl-thead{grid-template-columns:42px 1fr 44px 44px 44px 44px 38px}
+  .cl-row{grid-template-columns:42px 1fr 44px 44px 44px 44px 38px}
+  .hdr h1{font-size:19px}
+  .hdr-logo img{height:58px}
+  .ac-fields{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="offline-banner">⚠ Sem conexão — dados salvos localmente e sincronizados ao reconectar.</div>
+<div id="sync-banner">✓ Conexão restaurada — inspeções enviadas ao SharePoint.</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-left">
+      <div class="hdr-eyebrow">HRZ Energia · Safety Walk</div>
+      <h1 id="hdr-title">Check-list de Segurança</h1>
+      <p class="sub" id="hdr-sub">Selecione ambiente e nível para iniciar.</p>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-logo"><img src="logo_hrz_branco_alt.png" alt="HRZ"></div>
+      <button class="btn-lang" id="btn-lang" onclick="toggleLanguage()">EN</button>
+    </div>
+  </div>
+  <div class="hdr-tabs" id="hdr-env-tabs">
+    <button class="htab active" id="htab-torre" type="button" onclick="setEnv('torre')">Torre AT</button>
+    <button class="htab" id="htab-eolica" type="button" onclick="setEnv('eolica')">Eólica</button>
+    <button class="htab" id="htab-subestacao" type="button" onclick="setEnv('subestacao')">Subestação</button>
+    <button class="htab" id="htab-quimico" type="button" onclick="setEnv('quimico')">Est. Químicos</button>
+    <button class="htab" id="htab-acabados" type="button" onclick="setEnv('acabados')">Est. Acabados</button>
+    <button class="htab" id="htab-escritorio" type="button" onclick="setEnv('escritorio')">Escritório</button>
+    <button class="htab" id="htab-vias" type="button" onclick="setEnv('vias')">Vias</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- INSPECTION DATA -->
+  <div class="sdiv"><div class="sdiv-line"></div><span class="sdiv-label" id="lbl-section-data">Dados da inspeção</span><div class="sdiv-line"></div></div>
+  <div class="card">
+    <div class="info-grid">
+      <div class="field"><label id="lbl-inspector">Inspetor</label><input type="text" id="f-inspector" placeholder="Nome completo" oninput="clearInvalid(this);checkSaveReady()"><span class="field-err" id="err-inspector">Campo obrigatório</span></div>
+      <div class="field"><label id="lbl-company">Empresa</label><input type="text" id="f-company" placeholder="HRZ, Cymi..." oninput="clearInvalid(this);checkSaveReady()"><span class="field-err" id="err-company">Campo obrigatório</span></div>
+      <div class="field"><label id="lbl-date">Data</label><input type="date" id="f-date" oninput="clearInvalid(this);checkSaveReady()"><span class="field-err" id="err-date">Campo obrigatório</span></div>
+      <div class="field"><label id="lbl-local">Local / Ativo</label><input type="text" id="f-local" placeholder="SE São Mateus 2..." oninput="clearInvalid(this);checkSaveReady()"><span class="field-err" id="err-local">Campo obrigatório</span></div>
+      <div class="field"><label id="lbl-area">Área</label><input type="text" id="f-area" placeholder="Operação, HSE..." oninput="clearInvalid(this);checkSaveReady()"><span class="field-err" id="err-area">Campo obrigatório</span></div>
+      <div class="field"><label id="lbl-resp">Responsável local</label><input type="text" id="f-resp" placeholder="Nome" oninput="clearInvalid(this);checkSaveReady()"><span class="field-err" id="err-resp">Campo obrigatório</span></div>
+    </div>
+  </div>
+
+  <!-- SCORE -->
+  <div class="score-card" id="score-card">
+    <div class="score-left">
+      <div class="score-eyebrow" id="lbl-score-eye">Score de segurança</div>
+      <div class="score-title" id="lbl-score-title">Dedução por não conformidades identificadas</div>
+      <div class="score-chips" id="score-chips"></div>
+    </div>
+    <div class="score-dial">
+      <svg viewBox="0 0 76 76"><circle class="d-track" cx="38" cy="38" r="30"/><circle class="d-fill" id="d-fill" cx="38" cy="38" r="30" stroke-dasharray="188" stroke-dashoffset="0"/></svg>
+      <div class="dial-inner"><span class="dial-num" id="dial-num">100</span><span class="dial-pct">%</span></div>
+    </div>
+  </div>
+
+  <!-- SELECTION -->
+  <div class="sdiv"><div class="sdiv-line"></div><span class="sdiv-label" id="lbl-section-sel">Configuração da inspeção</span><div class="sdiv-line"></div></div>
+  <div class="sel-card">
+    <div class="sel-sec">
+      <div class="sel-lbl" id="lbl-level">Nível / Posição do inspetor</div>
+      <div class="lvl-tabs">
+        <button class="lvl op active" onclick="setLevel('op')"><span id="lvl-op">Operacional</span><span class="ls" id="lvl-op-sub">Técnicos, Operadores</span></button>
+        <button class="lvl ta" onclick="setLevel('ta')"><span id="lvl-ta">Supervisão</span><span class="ls" id="lvl-ta-sub">Supervisores, Coords</span></button>
+        <button class="lvl li" onclick="setLevel('li')"><span id="lvl-li">Gestão</span><span class="ls" id="lvl-li-sub">Gerentes, Diretores</span></button>
+      </div>
+    </div>
+    <div class="sel-sec">
+      <div class="sel-lbl" id="lbl-env">Ambiente inspecionado</div>
+      <div class="env-grid" id="env-tabs">
+        <button class="tab active" id="etab-torre" type="button" onclick="setEnv('torre')">Torre AT</button>
+        <button class="tab" id="etab-eolica" type="button" onclick="setEnv('eolica')">Eólica</button>
+        <button class="tab" id="etab-subestacao" type="button" onclick="setEnv('subestacao')">Subestação</button>
+        <button class="tab" id="etab-quimico" type="button" onclick="setEnv('quimico')">Est. Químicos</button>
+        <button class="tab" id="etab-acabados" type="button" onclick="setEnv('acabados')">Est. Acabados</button>
+        <button class="tab" id="etab-escritorio" type="button" onclick="setEnv('escritorio')">Escritório</button>
+        <button class="tab" id="etab-vias" type="button" onclick="setEnv('vias')">Vias</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RISK LEGEND -->
+  <div class="risk-card">
+    <div class="risk-title" id="lbl-risk-legend">Legenda de classificação de risco</div>
+    <div class="risk-rows">
+      <div class="risk-row"><span class="rpill im" id="r-im">Iminente</span><span class="rdesc" id="r-im-desc">Risco de morte ou lesão grave imediata — paralisação obrigatória da atividade.<span class="rded">−10%</span></span></div>
+      <div class="risk-row"><span class="rpill se" id="r-se">Sério</span><span class="rdesc" id="r-se-desc">Potencial de lesão significativa — ação urgente, prazo máx. 1 mês.<span class="rded">−8%</span></span></div>
+      <div class="risk-row"><span class="rpill mo" id="r-mo">Moderado</span><span class="rdesc" id="r-mo-desc">Desvio sem risco imediato — ação planejada, prazo máx. 3 meses.<span class="rded">−5%</span></span></div>
+      <div class="risk-row"><span class="rpill op" id="r-op">Oportunidade</span><span class="rdesc" id="r-op-desc">Sem desvio — potencial de melhoria, prazo máx. 6 meses.<span class="rded">−2%</span></span></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="prog-card" id="prog-card">
+    <div class="prog-top">
+      <span class="prog-lbl" id="lbl-progress">Progresso</span>
+      <div class="prog-chips" id="prog-chips"></div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="prog-count" id="prog-count">0 / 0</div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div id="checklist-area"></div>
+
+  <!-- ACTION PLAN -->
+  <div class="ap-section" id="ap-section">
+    <div class="ap-hdr" onclick="toggleAP()">
+      <div class="ap-hdr-l">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <h3 id="lbl-ap">Plano de Ação</h3>
+        <span class="nc-badge" id="nc-count">0</span>
+      </div>
+      <svg class="ap-chev open" id="ap-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="ap-body open" id="ap-body">
+      <div class="ap-empty" id="ap-empty">Nenhum desvio ou oportunidade registrada.</div>
+      <div id="ap-cards"></div>
+    </div>
+  </div>
+
+  <!-- PENDING -->
+  <div class="pending" id="pending-badge">
+    <div class="pdot"></div>
+    <span id="pending-text">Inspeções aguardando sincronização com SharePoint</span>
+  </div>
+
+  <!-- COMMENTS -->
+  <div class="sdiv"><div class="sdiv-line"></div><span class="sdiv-label" id="lbl-section-comments">Comentários gerais</span><div class="sdiv-line"></div></div>
+  <div class="card">
+    <textarea class="gc-ta" id="generalComments" placeholder="Observações gerais, recomendações, percepções..."></textarea>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bot">
+  <button class="btn btn-ghost" onclick="resetAll()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    <span id="btn-lbl-clear">Limpar</span>
+  </button>
+  <button class="btn btn-pdf" onclick="exportPDF()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    PDF
+  </button>
+  <button class="btn btn-share" onclick="shareReport()" id="btn-share" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    <span id="btn-lbl-share">Compartilhar</span>
+  </button>
+  <button class="btn btn-sync" id="btn-sync" onclick="manualSync()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+    <span id="btn-lbl-sync">Sincronizar</span>
+  </button>
+  <button class="btn btn-fin" id="btn-save" onclick="saveInspection()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <span id="btn-lbl-save">Finalizar inspeção</span>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" class="hidden-file" id="global-file-input" accept="image/*,.pdf,.doc,.docx" capture="environment">
+<input type="file" class="hidden-file" id="action-file-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+
+<script>
+// ══════════════════════════════════════════════════
+// DATA PT
+// ══════════════════════════════════════════════════
+const DATA = {
+  torre:{label:"Torre AT",op:[
+    "Os EPIs para trabalho em altura (talabartes, capacetes, luvas isolantes) estão completos, em bom estado e dentro da validade?",
+    "Existe Permissão de Trabalho (PT) emitida, assinada e em poder da equipe no campo?",
+    "A isolação e o seccionamento do circuito foram verificados e confirmados (NR-10)?",
+    "A escada ou estrutura de acesso à torre apresenta danos, ferrugem ou fixações soltas?",
+    "Os cabos de ancoragem e linha de vida estão corretamente instalados no ponto de trabalho?",
+    "A equipe realizou análise preliminar de risco (APR) antes do início da atividade?",
+    "Há comunicação funcional (rádio ou celular) entre equipe em altura e supervisão em campo?",
+    "As condições meteorológicas (vento, raios, chuva) foram verificadas antes do acesso à torre?"
+  ],ta:[
+    "A PT foi liberada pelo coordenador responsável e contém todas as medidas de controle descritas?",
+    "A composição da equipe em campo é compatível com o escopo da atividade (número mínimo, qualificação NR-10/NR-35)?",
+    "O plano de resgate em altura está definido, os recursos disponíveis e a equipe treinada para executá-lo?",
+    "As manutenções preventivas dos equipamentos de proteção coletiva (EPC) da torre estão em dia?",
+    "Houve algum desvio ou incidente nas últimas inspeções neste ativo? Ação corretiva foi concluída?",
+    "A equipe Cymi recebeu a integração de segurança do site e o briefing da atividade antes do início?",
+    "O check-list de inspeção pré-trabalho foi preenchido corretamente e está arquivado?"
+  ],li:[
+    "A cultura de segurança da equipe se reflete no comportamento observado em campo, sem pressão por produtividade?",
+    "Os resultados dos indicadores de segurança deste ativo (frequência de incidentes, near misses) foram comunicados à equipe?",
+    "O processo de gestão de não conformidades está sendo utilizado quando desvios de segurança são identificados?",
+    "Existe percepção de que liderança e gestão participam ativamente das inspeções, não apenas delegam?",
+    "Os investimentos em segurança (equipamentos, treinamentos, melhorias) estão sendo priorizados e executados?"
+  ]},
+  eolica:{label:"Eólica",op:[
+    "O acesso à base da turbina está sinalizado, desobstruído e com trava de acesso funcionando?",
+    "O operador verificou o estado do içamento interno (escada, elevador) antes do acesso à nacele?",
+    "Os EPIs específicos (capacete, arnês, protetor auditivo, luvas dielétricas) estão disponíveis e em bom estado?",
+    "O sistema de bloqueio e etiquetagem (LOTO) foi aplicado antes de qualquer intervenção na turbina?",
+    "Há risco de queda de objetos identificado? As ferramentas estão presas com cordas de segurança?",
+    "A turbina foi parada, rotores bloqueados e sistema elétrico desenergizado conforme procedimento?",
+    "O extintor interno está no prazo de validade e acessível?",
+    "A PT e APR foram elaboradas considerando os riscos específicos de espaço confinado na nacele?"
+  ],ta:[
+    "A equipe possui habilitação e treinamento específico para trabalho em turbinas eólicas?",
+    "O plano de manutenção preventiva da turbina está sendo seguido conforme cronograma do OEM?",
+    "Existe protocolo de comunicação entre a equipe em nacele e o operador de SCADA em solo?",
+    "As ocorrências de falha elétrica ou mecânica recentes foram analisadas e ações tomadas?",
+    "O contrato com a Cymi prevê indicadores de segurança monitorados e reportados mensalmente?",
+    "As condições de acesso às vias do parque eólico foram verificadas antes da mobilização da equipe?"
+  ],li:[
+    "A liderança do parque demonstra comportamento seguro visível em suas visitas ao campo?",
+    "Os acidentes e quase-acidentes em turbinas são compartilhados como lições aprendidas com toda a equipe?",
+    "Há canal formal para que operadores reportem condições inseguras sem receio de represália?",
+    "Os indicadores de segurança do parque eólico estão integrados ao painel ESG da HRZ?",
+    "A cultura de segurança percebida pelos trabalhadores está sendo avaliada periodicamente (pesquisa, diálogos)?"
+  ]},
+  subestacao:{label:"Subestação",op:[
+    "O pátio elétrico está delimitado com fita, correntes ou sinalização adequada para visitantes e equipes não autorizadas?",
+    "Os equipamentos de AT/MT apresentam sinalização de risco elétrico visível e legível?",
+    "As ferramentas utilizadas são isoladas e certificadas conforme NR-10?",
+    "As distâncias de segurança em relação a partes energizadas estão sendo respeitadas?",
+    "Há registro de treinamento NR-10 básico e complementar para toda a equipe que acessa o pátio?",
+    "Os aterramentos temporários foram aplicados conforme procedimento antes da intervenção?",
+    "O estado físico dos disjuntores, chaves seccionadoras e para-raios foi verificado visualmente?",
+    "O sistema de combate a incêndio (extintores, areia) está disponível e em condições de uso?"
+  ],ta:[
+    "O diagrama unifilar da subestação está atualizado e disponível na sala de controle?",
+    "O plano de emergência para incidentes elétricos (arco elétrico, incêndio em transformador) está documentado e treinado?",
+    "Existe rotina de inspeção termográfica dos equipamentos e as anomalias detectadas foram tratadas?",
+    "Os óleos isolantes dos transformadores estão dentro dos parâmetros e com laudos em dia?",
+    "O controle de acesso à sala de controle e pátio elétrico é efetivo (crachás, registro de entrada)?",
+    "As obrigações do ANEEL relativas à operação segura da subestação estão sendo cumpridas?"
+  ],li:[
+    "A subestação é reconhecida internamente como um ambiente crítico de segurança, com tratamento diferenciado?",
+    "Os planos de contingência foram revisados após os últimos eventos climáticos ou incidentes operacionais?",
+    "A gestão tem visibilidade clara dos riscos de vida presentes nas subestações e comunica isso regularmente?",
+    "Os investimentos em modernização e automação de proteção estão alinhados à estratégia de risco da HRZ?",
+    "Existe integração dos dados de segurança da subestação com o sistema de gestão ESG da companhia?"
+  ]},
+  quimico:{label:"Est. Químicos",op:[
+    "As FISPQs de todos os produtos armazenados estão disponíveis, legíveis e acessíveis aos trabalhadores?",
+    "Os produtos estão segregados por classe de risco e incompatibilidades observadas (oxidantes longe de inflamáveis)?",
+    "Os recipientes estão identificados, tampados e sem sinais de vazamento ou corrosão?",
+    "Os EPIs específicos para manuseio químico (óculos, luvas, avental) estão disponíveis no local?",
+    "Há chuveiro de emergência e lava-olhos acessível e em funcionamento no armazém?",
+    "A ventilação do armazém está funcionando e adequada ao volume e tipo de produtos armazenados?",
+    "Os extintores são compatíveis com as classes de risco dos produtos armazenados?",
+    "O estoque está dentro do limite máximo de armazenamento permitido pelo PPRA/licença ambiental?"
+  ],ta:[
+    "O inventário de produtos químicos está atualizado e integrado ao PPRA e PCMSO?",
+    "Existe procedimento de emergência para derramamento químico, treinado e com materiais disponíveis (kit de contenção)?",
+    "Os trabalhadores que manuseiam produtos químicos possuem treinamento documentado e válido?",
+    "O descarte de embalagens e resíduos químicos segue o PGRS e tem destinação rastreável?",
+    "A licença ambiental de operação está válida e cobre os produtos atualmente armazenados?"
+  ],li:[
+    "A HRZ possui visibilidade dos passivos ambientais potenciais associados ao armazém químico?",
+    "A gestão de produtos perigosos está integrada à estratégia ESG da companhia e reportada ao Actis?",
+    "Há comprometimento da liderança com a substituição progressiva de produtos de maior risco ambiental e à saúde?",
+    "Os eventos de vazamento ou descarte irregular são tratados como não conformidades ambientais e investigados?",
+    "A comunidade do entorno tem sido considerada nas avaliações de risco ambiental associadas ao armazém?"
+  ]},
+  acabados:{label:"Est. Acabados",op:[
+    "As prateleiras e estruturas de armazenamento estão em bom estado, niveladas e com cargas dentro da capacidade?",
+    "As vias de circulação e saídas de emergência estão desobstruídas e sinalizadas?",
+    "Os equipamentos de movimentação (empilhadeira, paleteira) foram inspecionados e têm operadores habilitados?",
+    "O uso de EPI (bota de segurança, colete, capacete) é observado por todos no armazém?",
+    "Existe sinalização de altura máxima de empilhamento e ela está sendo respeitada?",
+    "Os extintores estão posicionados conforme planta de emergência, sem obstrução e no prazo?",
+    "A iluminação é adequada para circulação segura e operação de equipamentos?"
+  ],ta:[
+    "Os operadores de empilhadeira possuem habilitação válida e exame médico em dia?",
+    "O layout do armazém foi revisado recentemente considerando fluxo de pedestres e máquinas?",
+    "Existe rotina de inspeção das estruturas porta-paletes conforme norma ABNT NBR 15524?",
+    "Os incidentes de queda de materiais ou colisões foram registrados e investigados?",
+    "O plano de emergência do armazém contempla evacuação, combate a incêndio e primeiros socorros?"
+  ],li:[
+    "As condições de segurança do armazém são percebidas pelos trabalhadores como prioridade da liderança?",
+    "Os dados de segurança do armazém são consolidados junto aos demais ativos da HRZ para análise de tendências?",
+    "Existe investimento planejado para melhoria das condições de armazenagem e ergonomia?",
+    "A segurança dos prestadores de serviços que operam no armazém é gerida com o mesmo rigor dos colaboradores diretos?",
+    "A liderança realiza visitas periódicas ao armazém como sinal visível de comprometimento?"
+  ]},
+  escritorio:{label:"Escritório",op:[
+    "As saídas de emergência estão sinalizadas, desobstruídas e com rotas de evacuação visíveis?",
+    "Os extintores estão posicionados, sinalizados e dentro do prazo de validade?",
+    "As instalações elétricas (tomadas, quadros, extensões) estão em bom estado e sem improviso?",
+    "O mobiliário e estações de trabalho oferecem condições ergonômicas adequadas (altura, iluminação, cadeiras)?",
+    "O primeiro socorrista designado está presente e seu contato divulgado para a equipe?",
+    "Os equipamentos de TI críticos da sala de controle possuem nobreak funcionando e testado?",
+    "O acesso à sala de controle é restrito e controlado a pessoas autorizadas?"
+  ],ta:[
+    "O PPCI (plano de prevenção contra incêndio) está atualizado e os simulacros realizados no período?",
+    "O PCMSO e PPRA estão válidos para as atividades do escritório e sala de controle?",
+    "Os riscos ergonômicos foram mapeados e há ações em andamento para redução de afastamentos?",
+    "O plano de continuidade de negócios (PCN) da sala de controle foi testado recentemente?",
+    "Os funcionários que trabalham em horários noturnos ou sobreaviso têm suporte e condições adequadas?"
+  ],li:[
+    "A saúde mental e o bem-estar dos colaboradores que trabalham em ambiente de controle operacional são monitorados?",
+    "A liderança demonstra interesse genuíno nas condições de trabalho do escritório, não apenas nos ativos de campo?",
+    "Existe política clara de prevenção ao assédio moral, sexual e discriminação, com canal seguro de denúncia?",
+    "Os dados de absenteísmo, turnover e clima organizacional são analisados como indicadores de segurança cultural?",
+    "A HRZ promove ambiente psicologicamente seguro onde discordâncias e problemas são levantados sem receio?"
+  ]},
+  vias:{label:"Vias",op:[
+    "O veículo utilizado passou por inspeção pré-viagem (pneus, freios, lanternas, combustível)?",
+    "O motorista possui habilitação válida e está descansado (sem jornada superior ao permitido)?",
+    "Os passageiros utilizam cinto de segurança e não há excesso de lotação?",
+    "O trajeto foi planejado com identificação de riscos (trechos críticos, pontos de atenção climática)?",
+    "A comunicação com a base está garantida durante toda a rota (rádio ou sinal de celular)?",
+    "Há kit de emergência veicular (triângulo, extintor, colete, socorros básicos) no veículo?",
+    "As condições das vias internas ao parque ou subestação (cascalho, erosão, buracos) foram verificadas?"
+  ],ta:[
+    "A frota de veículos possui manutenção preventiva em dia, com registro por placa e quilometragem?",
+    "Existe política de segurança no trânsito com regras claras de velocidade, uso de celular e alcoolemia?",
+    "Os acidentes de percurso e eventos de trânsito são registrados no sistema de não conformidades?",
+    "Os acessos críticos (corredores de transmissão, eólicas em zona rural) foram avaliados após período chuvoso?",
+    "Motoristas terceirizados ou da Cymi seguem os mesmos padrões de segurança viária da HRZ?"
+  ],li:[
+    "A segurança viária é tratada como risco prioritário, reconhecendo que o trânsito é uma das maiores causas de morte em campo?",
+    "Os dados de incidentes de transporte são consolidados e reportados à liderança com a mesma relevância que acidentes elétricos?",
+    "A liderança revisa as condições das vias de acesso durante suas visitas aos ativos, não apenas o estado operacional dos equipamentos?",
+    "Existe pressão implícita por deslocamentos rápidos que possa estar incentivando comportamentos inseguros no trânsito?",
+    "A empresa investe em melhoria das vias internas quando o diagnóstico aponta risco estrutural de acesso?"
+  ]}
+};
+
+// ══════════════════════════════════════════════════
+// DATA EN — translated questions
+// ══════════════════════════════════════════════════
+const DATA_EN = {
+  torre:{label:"HV Tower",op:[
+    "Are PPE for work at height (harnesses, helmets, insulating gloves) complete, in good condition and within validity?",
+    "Is a Work Permit (WP) issued, signed and held by the field team?",
+    "Has circuit isolation and disconnection been verified and confirmed (NR-10)?",
+    "Does the tower access ladder or structure show damage, rust or loose fixings?",
+    "Are anchor cables and lifelines correctly installed at the work point?",
+    "Did the team conduct a Preliminary Risk Analysis (PRA) before starting the activity?",
+    "Is there functional communication (radio or mobile) between the team at height and field supervision?",
+    "Were meteorological conditions (wind, lightning, rain) checked before tower access?"
+  ],ta:[
+    "Was the WP released by the responsible coordinator and does it contain all described control measures?",
+    "Is the field team composition compatible with the activity scope (minimum number, NR-10/NR-35 qualification)?",
+    "Is the height rescue plan defined, resources available and the team trained to execute it?",
+    "Are preventive maintenances of collective protection equipment (CPE) on the tower up to date?",
+    "Were there deviations or incidents in recent inspections of this asset? Was corrective action completed?",
+    "Did the Cymi team receive the site safety integration and activity briefing before starting?",
+    "Was the pre-work inspection checklist correctly filled out and archived?"
+  ],li:[
+    "Does the team's safety culture reflect in field behaviour, without productivity pressure?",
+    "Have safety indicator results for this asset (incident frequency, near misses) been communicated to the team?",
+    "Is the non-conformity management process being used when safety deviations are identified?",
+    "Is there a perception that leadership actively participates in inspections, not just delegates?",
+    "Are safety investments (equipment, training, improvements) being prioritised and executed?"
+  ]},
+  eolica:{label:"Wind Turbine",op:[
+    "Is access to the turbine base signposted, clear and with access lock working?",
+    "Did the operator check the internal hoisting system (ladder, elevator) before nacelle access?",
+    "Are specific PPE (helmet, harness, ear protection, dielectric gloves) available and in good condition?",
+    "Was the lock-out/tag-out (LOTO) system applied before any turbine intervention?",
+    "Is falling object risk identified? Are tools secured with safety ropes?",
+    "Was the turbine stopped, rotors locked and electrical system de-energised per procedure?",
+    "Is the internal extinguisher within validity and accessible?",
+    "Were the WP and PRA prepared considering confined space risks in the nacelle?"
+  ],ta:[
+    "Does the team have qualification and specific training for work on wind turbines?",
+    "Is the turbine preventive maintenance plan being followed per OEM schedule?",
+    "Is there a communication protocol between the nacelle team and the SCADA operator on the ground?",
+    "Have recent electrical or mechanical failures been analysed and actions taken?",
+    "Does the Cymi contract include safety indicators monitored and reported monthly?",
+    "Were wind farm access road conditions checked before team mobilisation?"
+  ],li:[
+    "Does park leadership demonstrate visible safe behaviour during field visits?",
+    "Are turbine accidents and near misses shared as lessons learned with the entire team?",
+    "Is there a formal channel for operators to report unsafe conditions without fear of retaliation?",
+    "Are wind farm safety indicators integrated into HRZ's ESG dashboard?",
+    "Is the safety culture perceived by workers being periodically evaluated (survey, dialogues)?"
+  ]},
+  subestacao:{label:"Substation",op:[
+    "Is the electrical yard delimited with tape, chains or adequate signage for unauthorised visitors and teams?",
+    "Do HV/MV equipment show visible and legible electrical hazard signage?",
+    "Are tools used insulated and certified per NR-10?",
+    "Are safety distances from energised parts being observed?",
+    "Is there a record of basic and supplementary NR-10 training for all staff accessing the yard?",
+    "Were temporary earthings applied per procedure before intervention?",
+    "Was the physical condition of circuit breakers, disconnectors and lightning arresters visually checked?",
+    "Is the fire-fighting system (extinguishers, sand) available and in usable condition?"
+  ],ta:[
+    "Is the substation single-line diagram up to date and available in the control room?",
+    "Is the emergency plan for electrical incidents (arc flash, transformer fire) documented and trained?",
+    "Is there a thermographic inspection routine for equipment and have detected anomalies been addressed?",
+    "Are transformer insulating oils within parameters and with current test reports?",
+    "Is access control to the control room and electrical yard effective (badges, entry records)?",
+    "Are ANEEL obligations regarding safe substation operation being met?"
+  ],li:[
+    "Is the substation recognised internally as a critical safety environment, with differentiated treatment?",
+    "Have contingency plans been revised after recent weather events or operational incidents?",
+    "Does management have clear visibility of the life risks present in substations and communicate this regularly?",
+    "Are investments in modernisation and protection automation aligned with HRZ's risk strategy?",
+    "Is substation safety data integrated with the company's ESG management system?"
+  ]},
+  quimico:{label:"Chemical Storage",op:[
+    "Are MSDSs for all stored products available, legible and accessible to workers?",
+    "Are products segregated by hazard class with incompatibilities observed (oxidisers away from flammables)?",
+    "Are containers identified, sealed and without signs of leakage or corrosion?",
+    "Is specific PPE for chemical handling (goggles, gloves, apron) available on site?",
+    "Is there an accessible and functioning emergency shower and eye wash in the warehouse?",
+    "Is warehouse ventilation working and adequate for the volume and type of products stored?",
+    "Are extinguishers compatible with the hazard classes of stored products?",
+    "Is stock within the maximum storage limit allowed by PPRA/environmental licence?"
+  ],ta:[
+    "Is the chemical product inventory up to date and integrated with the PPRA and PCMSO?",
+    "Is there a chemical spill emergency procedure, trained and with available materials (containment kit)?",
+    "Do workers who handle chemical products have documented and valid training?",
+    "Does disposal of chemical packaging and waste follow the PGRS and have traceable destination?",
+    "Is the operating environmental licence valid and covering currently stored products?"
+  ],li:[
+    "Does HRZ have visibility of potential environmental liabilities associated with the chemical warehouse?",
+    "Is hazardous product management integrated into the company's ESG strategy and reported to Actis?",
+    "Is there leadership commitment to progressive replacement of higher risk products?",
+    "Are spill or irregular disposal events treated as environmental non-conformities and investigated?",
+    "Has the surrounding community been considered in environmental risk assessments?"
+  ]},
+  acabados:{label:"Finished Goods",op:[
+    "Are shelving and storage structures in good condition, level and with loads within capacity?",
+    "Are circulation routes and emergency exits unobstructed and signposted?",
+    "Have handling equipment (forklift, pallet truck) been inspected and do they have qualified operators?",
+    "Is PPE use (safety boots, vest, helmet) observed by everyone in the warehouse?",
+    "Is maximum stacking height signage present and being respected?",
+    "Are extinguishers positioned per emergency plan, unobstructed and within validity?",
+    "Is lighting adequate for safe circulation and equipment operation?"
+  ],ta:[
+    "Do forklift operators have valid certification and current medical examination?",
+    "Has the warehouse layout been recently reviewed considering pedestrian and machine flow?",
+    "Is there a pallet rack inspection routine per ABNT NBR 15524?",
+    "Have material fall or collision incidents been recorded and investigated?",
+    "Does the warehouse emergency plan cover evacuation, fire fighting and first aid?"
+  ],li:[
+    "Are warehouse safety conditions perceived by workers as a leadership priority?",
+    "Is warehouse safety data consolidated with HRZ's other assets for trend analysis?",
+    "Is there planned investment for improving storage conditions and ergonomics?",
+    "Is the safety of service providers managed with the same rigour as direct employees?",
+    "Does leadership conduct periodic visits to the warehouse as a visible sign of commitment?"
+  ]},
+  escritorio:{label:"Office",op:[
+    "Are emergency exits signposted, clear and with visible evacuation routes?",
+    "Are extinguishers positioned, signposted and within validity?",
+    "Are electrical installations (sockets, panels, extensions) in good condition without improvisation?",
+    "Do furniture and workstations offer adequate ergonomic conditions (height, lighting, chairs)?",
+    "Is the designated first aider present and their contact communicated to the team?",
+    "Do critical IT equipment in the control room have working and tested UPS?",
+    "Is access to the control room restricted and controlled to authorised persons?"
+  ],ta:[
+    "Is the PPCI (fire prevention plan) up to date and have drills been carried out in the period?",
+    "Are the PCMSO and PPRA valid for office and control room activities?",
+    "Have ergonomic risks been mapped and are there ongoing actions to reduce absences?",
+    "Has the business continuity plan (BCP) for the control room been recently tested?",
+    "Do employees working night shifts or on-call have adequate support and conditions?"
+  ],li:[
+    "Is the mental health and well-being of employees in the operational control environment monitored?",
+    "Does leadership show genuine interest in office working conditions, not just field assets?",
+    "Is there a clear policy to prevent harassment and discrimination, with a safe reporting channel?",
+    "Are absenteeism, turnover and climate data analysed as cultural safety indicators?",
+    "Does HRZ promote a psychologically safe environment where problems are raised without fear?"
+  ]},
+  vias:{label:"Access Roads",op:[
+    "Has the vehicle undergone a pre-trip inspection (tyres, brakes, lights, fuel)?",
+    "Does the driver hold a valid licence and is rested (no journey exceeding the allowed limit)?",
+    "Are passengers wearing seatbelts and is there no overcrowding?",
+    "Was the route planned with risk identification (critical sections, weather hazard points)?",
+    "Is communication with base guaranteed throughout the route (radio or mobile signal)?",
+    "Is there a vehicle emergency kit (triangle, extinguisher, vest, basic first aid) in the vehicle?",
+    "Were internal road conditions at the park or substation (gravel, erosion, potholes) checked?"
+  ],ta:[
+    "Does the vehicle fleet have up-to-date preventive maintenance, recorded by plate and mileage?",
+    "Is there a road safety policy with clear rules on speed, mobile phone use and alcohol?",
+    "Are commuting accidents and traffic events recorded in the non-conformity system?",
+    "Have critical accesses been assessed after the rainy season?",
+    "Do subcontracted or Cymi drivers follow the same HRZ road safety standards?"
+  ],li:[
+    "Is road safety treated as a priority risk, recognising that traffic is one of the leading causes of field fatalities?",
+    "Is transport incident data consolidated and reported to leadership with the same relevance as electrical accidents?",
+    "Does leadership review access road conditions during asset visits, not just equipment status?",
+    "Is there implicit pressure for fast travel that may be encouraging unsafe driving behaviour?",
+    "Does the company invest in improving internal roads when the diagnosis points to structural access risk?"
+  ]}
+};
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let currentEnv='torre', currentLevel='op', currentLang='pt', apOpen=true;
+let pendingFileKey=null, pendingActionKey=null;
+const checks={}, obsMap={}, files={}, actions={};
+
+// ══════════════════════════════════════════════════
+// INDEXEDDB
+// ══════════════════════════════════════════════════
+const DB_NAME='hrz_safety_walk', DB_VER=1, STORE='inspections';
+let db=null;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e.target.error)})}
+function dbSave(rec){return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(rec);tx.oncomplete=res;tx.onerror=e=>rej(e.target.error)})}
+function dbGetAll(){return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly');const r=tx.objectStore(STORE).getAll();r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error)})}
+function dbDelete(id){return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=res;tx.onerror=e=>rej(e.target.error)})}
+
+// ══════════════════════════════════════════════════
+// SHAREPOINT SYNC
+// ══════════════════════════════════════════════════
+const SP_SITE='https://novohorizonpart.sharepoint.com/sites/HRZProcessHub';
+const SP_LIST='SafetyWalk_Inspections';
+async function syncToSP(rec){
+  if(!SP_SITE||!SP_LIST)return false;
+  try{
+    const dr=await fetch(`${SP_SITE}/_api/contextinfo`,{method:'POST',headers:{'Accept':'application/json;odata=verbose'},credentials:'include'});
+    const dd=await dr.json();
+    const digest=dd.d.GetContextWebInformation.FormDigestValue;
+    const body={'__metadata':{'type':`SP.Data.${SP_LIST}ListItem`},'Title':`${rec.local} — ${rec.date}`,'Inspector':rec.inspector,'Company':rec.company,'InspectionDate':rec.date,'Local':rec.local,'Area':rec.area,'Responsible':rec.responsible,'Environment':rec.env,'Level':rec.level,'Score':Number(rec.score),'Answers':JSON.stringify(rec.answers),'Actions':JSON.stringify(rec.actions),'Comments':rec.comments,
+'SyncedAt':new Date().toISOString()};
+    const pr=await fetch(`${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`,{method:'POST',credentials:'include',headers:{'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify(body)});
+    return pr.ok;
+  }catch{return false;}
+}
+async function syncPending(){
+  if(!navigator.onLine)return;
+  const pending=(await dbGetAll()).filter(r=>r.status==='pending');
+  if(!pending.length)return;
+  let synced=0;
+  for(const r of pending){const ok=await syncToSP(r);if(ok){await dbDelete(r.id);synced++;}}
+  if(synced>0){showSyncBanner();updatePendingBadge();}
+}
+async function updatePendingBadge(){
+  const all=await dbGetAll();
+  const n=all.filter(r=>r.status==='pending').length;
+  const b=document.getElementById('pending-badge');
+  document.getElementById('pending-text').textContent=`${n} inspeção(ões) aguardando sincronização`;
+  b.classList.toggle('show',n>0);
+  const syncBtn=document.getElementById('btn-sync');
+  if(syncBtn&&n>0)syncBtn.classList.add('show');
+}
+function updateOnlineStatus(){
+  document.getElementById('offline-banner').classList.toggle('show',!navigator.onLine);
+  if(navigator.onLine)syncPending();
+}
+function showSyncBanner(){const b=document.getElementById('sync-banner');b.classList.add('show');setTimeout(()=>b.classList.remove('show'),3800);}
+window.addEventListener('online',updateOnlineStatus);
+window.addEventListener('offline',updateOnlineStatus);
+
+// ══════════════════════════════════════════════════
+// KEYS
+// ══════════════════════════════════════════════════
+function gk(e,l,i){return`${e}__${l}__${i}`}
+function gr(e,l,i){const em={torre:'TR',eolica:'EO',subestacao:'SE',quimico:'QU',acabados:'AC',escritorio:'ES',vias:'VI'};const lm={op:'OP',ta:'TA',li:'LI'};return`${em[e]}-${lm[l]}-${String(i+1).padStart(2,'0')}`}
+
+// ══════════════════════════════════════════════════
+// ACTIVE DATA (respects language)
+// ══════════════════════════════════════════════════
+function getD(){return(currentLang==='en'?DATA_EN:DATA)[currentEnv][currentLevel]||[]}
+function getLabel(env){return(currentLang==='en'?DATA_EN:DATA)[env].label}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function initTabs(){
+  const keys=Object.keys(DATA);
+
+  // Header env tabs: no SharePoint os botões podem precisar existir no HTML.
+  const ht=document.getElementById('hdr-env-tabs');
+  if(ht && !ht.querySelector('button')){
+    keys.forEach(k=>{
+      const b=document.createElement('button');
+      b.className='htab'+(k===currentEnv?' active':'');
+      b.id='htab-'+k;
+      b.type='button';
+      b.textContent=getLabel(k);
+      b.onclick=()=>setEnv(k);
+      ht.appendChild(b);
+    });
+  }
+
+  // Selection grid: mantém os botões fixos e só recria se estiver vazio.
+  const eg=document.getElementById('env-tabs');
+  if(eg && !eg.querySelector('button')){
+    keys.forEach(k=>{
+      const b=document.createElement('button');
+      b.className='tab'+(k===currentEnv?' active':'');
+      b.id='etab-'+k;
+      b.type='button';
+      b.textContent=getLabel(k);
+      b.onclick=()=>setEnv(k);
+      eg.appendChild(b);
+    });
+  }
+
+  refreshTabLabels();
+  _applyEnv(currentEnv);
+}
+
+function refreshTabLabels(){
+  Object.keys(DATA).forEach(k=>{
+    const ht=document.getElementById('htab-'+k);
+    if(ht)ht.textContent=getLabel(k);
+    const et=document.getElementById('etab-'+k);
+    if(et)et.textContent=getLabel(k);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════
+function hasStarted(){return Object.values(checks).some(v=>v)}
+function confirmReset(cb){
+  const msg=currentLang==='en'
+    ?'Inspection in progress.\nChanging environment or level will DELETE all answers. Continue?'
+    :'Inspeção em andamento.\nAlterar ambiente ou nível irá APAGAR todas as respostas. Continuar?';
+  if(confirm(msg)){[checks,obsMap,files,actions].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));cb();}
+}
+function setEnv(e){
+  if(e===currentEnv)return;
+  if(hasStarted()){confirmReset(()=>{currentEnv=e;_applyEnv(e);render();});return;}
+  currentEnv=e;_applyEnv(e);render();
+}
+function _applyEnv(e){
+  document.querySelectorAll('.htab').forEach((t,i)=>t.classList.toggle('active',Object.keys(DATA)[i]===e));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',Object.keys(DATA)[i]===e));
+}
+function setLevel(l){
+  if(l===currentLevel)return;
+  if(hasStarted()){confirmReset(()=>{currentLevel=l;_applyLevel(l);render();});return;}
+  currentLevel=l;_applyLevel(l);render();
+}
+function _applyLevel(l){
+  document.querySelectorAll('.lvl').forEach(t=>t.classList.remove('active'));
+  const lvlBtn=document.querySelector(`.lvl.${l}`); if(lvlBtn) lvlBtn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+function render(){
+  const area=document.getElementById('checklist-area');
+  const items=getD();
+  if(!items.length){area.innerHTML='<div class="empty-state">Nenhuma pergunta para esta combinação.</div>';return;}
+  const L=currentLang==='en'
+    ?{q:'Question',sim:'Yes',nao:'No',na:'N/A',om:'OI',anx:'Att.'}
+    :{q:'Pergunta',sim:'Sim',nao:'Não',na:'N.A.',om:'OM',anx:'Anx.'};
+  let html=`<div class="cl-wrap"><div class="cl-thead"><div style="font-size:8px;color:rgba(255,255,255,.3)">Ref.</div><div>${L.q}</div><div class="cc">${L.sim}</div><div class="cc">${L.nao}</div><div class="cc">${L.na}</div><div class="cc" style="color:#C4B5FD">${L.om}</div><div class="cc">${L.anx}</div></div>`;
+  items.forEach((q,i)=>{
+    const k=gk(currentEnv,currentLevel,i),ref=gr(currentEnv,currentLevel,i);
+    const isN=checks[k]==='N',isO=checks[k]==='O',hasF=!!files[k];
+    const bg=isN?'background:#FEF5F5':isO?'background:#F5F3FF':'';
+    html+=`<div class="cl-item" id="item-${k}"><div class="cl-row" style="${bg}"><div class="cl-ref">${ref}</div><div class="cl-q">${q}</div><div class="cl-chk cs"><input type="checkbox" ${checks[k]==='S'?'checked':''} onchange="setCheck('${k}','S',this)"></div><div class="cl-chk cn"><input type="checkbox" ${checks[k]==='N'?'checked':''} onchange="setCheck('${k}','N',this)"></div><div class="cl-chk ca"><input type="checkbox" ${checks[k]==='A'?'checked':''} onchange="setCheck('${k}','A',this)"></div><div class="cl-chk co"><input type="checkbox" ${checks[k]==='O'?'checked':''} onchange="setCheck('${k}','O',this)"></div><div><button class="btn-clip ${hasF?'has-file':''}" onclick="triggerFile('${k}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button></div></div><div class="cl-sub ${(obsMap[k]||isN||isO)?'open':''}" id="sub-${k}"><div class="cl-sub-inner"><textarea class="cl-obs" rows="2" placeholder="${currentLang==='en'?'Observation...':'Observação...'}" oninput="obsMap['${k}']=this.value">${obsMap[k]||''}</textarea>${hasF?`<span class="attach-lbl">📎 ${files[k].name}</span>`:''}</div></div></div>`;
+  });
+  html+='</div>';
+  area.innerHTML=html;
+  updateProgress();
+  renderAP();
+}
+
+// ══════════════════════════════════════════════════
+// CHECK
+// ══════════════════════════════════════════════════
+function setCheck(k,val,el){
+  const prev=checks[k];
+  checks[k]=(prev===val)?null:val;
+  const item=document.getElementById('item-'+k);
+  if(item){
+    item.querySelectorAll('input[type="checkbox"]').forEach(c=>c.checked=false);
+    if(checks[k])el.checked=true;
+    const row=item.querySelector('.cl-row');
+    if(row)row.style.background=checks[k]==='N'?'#FEF5F5':checks[k]==='O'?'#F5F3FF':'';
+  }
+  const sub=document.getElementById('sub-'+k);
+  if(sub)sub.classList.toggle('open',!!(checks[k]==='N'||checks[k]==='O'||obsMap[k]));
+  updateProgress();renderAP();
+}
+
+// ══════════════════════════════════════════════════
+// FILE ATTACH
+// ══════════════════════════════════════════════════
+function triggerFile(k){pendingFileKey=k;const i=document.getElementById('global-file-input');i.value='';i.click();}
+document.getElementById('global-file-input').addEventListener('change',function(){
+  if(!this.files[0]||!pendingFileKey)return;
+  files[pendingFileKey]=this.files[0];
+  const btn=document.querySelector(`#item-${pendingFileKey} .btn-clip`);
+  if(btn){btn.classList.add('has-file');btn.title='Anexo: '+this.files[0].name;}
+  const sub=document.getElementById('sub-'+pendingFileKey);
+  if(sub){sub.classList.add('open');let sp=sub.querySelector('.attach-lbl');if(!sp){sp=document.createElement('span');sp.className='attach-lbl';sub.querySelector('.cl-sub-inner').appendChild(sp);}sp.textContent='📎 '+this.files[0].name;}
+  showToast(currentLang==='en'?'Attachment added.':'Anexo adicionado.');
+  pendingFileKey=null;
+});
+function triggerActionFile(k){pendingActionKey=k;const i=document.getElementById('action-file-input');i.value='';i.click();}
+document.getElementById('action-file-input').addEventListener('change',function(){
+  if(!this.files[0]||!pendingActionKey)return;
+  const k=pendingActionKey;
+  if(!actions[k])actions[k]={resp:'',deadline:'',priority:'iminente',plan:'',status:'aberta',evidenceName:''};
+  actions[k].evidenceName=this.files[0].name;
+  actions[k].evidenceFile=this.files[0];
+  const card=document.querySelector(`[onclick="triggerActionFile('${k}')"]`)?.closest('.ac');
+  if(card){const btn=card.querySelector('.btn-clip');if(btn){btn.classList.add('has-file');btn.title='Evidência: '+this.files[0].name;}const sp=document.getElementById('ev-name-'+k);if(sp){sp.textContent='📎 '+this.files[0].name;sp.style.display='';}}
+  showToast(currentLang==='en'?'Evidence attached.':'Evidência anexada.');
+  pendingActionKey=null;
+});
+
+// ══════════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════════
+function updateProgress(){
+  const items=getD(),keys=items.map((_,i)=>gk(currentEnv,currentLevel,i));
+  const total=keys.length,answered=keys.filter(k=>checks[k]).length;
+  const sim=keys.filter(k=>checks[k]==='S').length,nao=keys.filter(k=>checks[k]==='N').length;
+  const na=keys.filter(k=>checks[k]==='A').length,om=keys.filter(k=>checks[k]==='O').length;
+  const pct=total?Math.round(answered/total*100):0;
+  document.getElementById('prog-card').style.display='block';
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-count').textContent=`${answered} / ${total}`;
+  const L=currentLang==='en';
+  document.getElementById('prog-chips').innerHTML=`<div class="pchip"><div class="dot dg"></div>${sim} ${L?'Yes':'Sim'}</div><div class="pchip"><div class="dot dr"></div>${nao} ${L?'No':'Não'}</div><div class="pchip"><div class="dot da"></div>${na} N/A</div><div class="pchip"><div class="dot do"></div>${om} ${L?'OI':'OM'}</div><div class="pchip"><div class="dot dx"></div>${total-answered} ${L?'Pending':'Pend.'}</div>`;
+  updateScore();
+}
+
+// ══════════════════════════════════════════════════
+// SCORE
+// ══════════════════════════════════════════════════
+function updateScore(){
+  const any=Object.values(checks).some(v=>v);
+  const card=document.getElementById('score-card');
+  if(!any){card.style.display='none';return;}
+  const devs=[];
+  Object.keys(DATA).forEach(env=>['op','ta','li'].forEach(lvl=>(DATA[env][lvl]||[]).forEach((_,i)=>{const k=gk(env,lvl,i);if(checks[k]==='N'||checks[k]==='O')devs.push(k);})));
+  let score=100,iC=0,sC=0,mC=0,oC=0,iD=0,sD=0,mD=0,oD=0;
+  devs.forEach(k=>{const p=actions[k]?.priority||'iminente';if(p==='serio'){score-=8;sD+=8;sC++;}else if(p==='moderado'){score-=5;mD+=5;mC++;}else if(p==='oportunidade'){score-=2;oD+=2;oC++;}else{score-=10;iD+=10;iC++;}});
+  score=Math.max(0,score);
+  const circ=188,offset=circ-(score/100)*circ;
+  const color=score>=90?'#00B38A':score>=75?'#29A8E5':score>=50?'#F59E0B':'#E53935';
+  card.style.display='flex';
+  document.getElementById('dial-num').textContent=score;
+  const df=document.getElementById('d-fill');df.style.strokeDashoffset=offset;df.style.stroke=color;
+  const L=currentLang==='en';
+  const chips=[];
+  if(iC)chips.push(`<div class="ded-chip"><div class="ded-dot" style="background:#E53935"></div>${iC}× ${L?'Imminent':'Iminente'} −${iD}%</div>`);
+  if(sC)chips.push(`<div class="ded-chip"><div class="ded-dot" style="background:#F59E0B"></div>${sC}× ${L?'Serious':'Sério'} −${sD}%</div>`);
+  if(mC)chips.push(`<div class="ded-chip"><div class="ded-dot" style="background:#29A8E5"></div>${mC}× ${L?'Moderate':'Moderado'} −${mD}%</div>`);
+  if(oC)chips.push(`<div class="ded-chip"><div class="ded-dot" style="background:#7C3AED"></div>${oC}× ${L?'Opportunity':'Oportunidade'} −${oD}%</div>`);
+  document.getElementById('score-chips').innerHTML=chips.join('');
+}
+
+// ══════════════════════════════════════════════════
+// ACTION PLAN
+// ══════════════════════════════════════════════════
+function renderAP(){
+  const devs=[];
+  Object.keys(DATA).forEach(env=>['op','ta','li'].forEach(lvl=>(DATA[env][lvl]||[]).forEach((q,i)=>{const k=gk(env,lvl,i);if(checks[k]==='N'||checks[k]==='O')devs.push({k,q,ref:gr(env,lvl,i),type:checks[k]});})));
+  const sec=document.getElementById('ap-section');
+  document.getElementById('nc-count').textContent=devs.length;
+  if(!devs.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  document.getElementById('ap-empty').style.display='none';
+  const L=currentLang==='en';
+  document.getElementById('ap-cards').innerHTML=devs.map(({k,q,ref,type})=>{
+    if(!actions[k])actions[k]={resp:'',deadline:'',priority:type==='O'?'oportunidade':'iminente',plan:'',status:'aberta',evidenceName:''};
+    const a=actions[k],isOM=type==='O',bc=isOM?'#7C3AED':'#E53935';
+    return`<div class="ac" style="border-left:3px solid ${bc}"><div class="ac-ref-row"><span class="ac-ref">${ref}</span>${isOM?`<span class="rpill op" style="font-size:8px;padding:1px 6px">${L?'Opportunity':'Oportunidade'}</span>`:''}<span class="ac-q">${q.length>80?q.slice(0,80)+'…':q}</span></div><div class="ac-fields"><div class="ac-field"><label>${L?'Responsible':'Responsável'}</label><input class="ac-input" type="text" placeholder="${L?'Name':'Nome'}" value="${a.resp}" oninput="actions['${k}'].resp=this.value"></div><div class="ac-field"><label>${L?'Deadline':'Prazo'}</label><input class="ac-input" type="date" value="${a.deadline}" min="${deadMin()}" max="${deadMax(a.priority)}" oninput="actions['${k}'].deadline=this.value"></div><div class="ac-field"><label>${L?'Risk':'Classificação'}</label><select class="ac-sel" onchange="actions['${k}'].priority=this.value;updateScore();updDeadMax(this,'${k}')"><option value="iminente" ${a.priority==='iminente'?'selected':''}>🔴 ${L?'Imminent (−10%)':'Iminente (−10%)'}</option><option value="serio" ${a.priority==='serio'?'selected':''}>🟡 ${L?'Serious (−8%)':'Sério (−8%)'}</option><option value="moderado" ${a.priority==='moderado'?'selected':''}>🔵 ${L?'Moderate (−5%)':'Moderado (−5%)'}</option><option value="oportunidade" ${a.priority==='oportunidade'?'selected':''}>🟣 ${L?'Opportunity (−2%)':'Oportunidade (−2%)'}</option></select></div><div class="ac-field"><label>Status</label><select class="ac-sel" onchange="actions['${k}'].status=this.value"><option value="aberta" ${a.status==='aberta'?'selected':''}>${L?'Open':'Aberta'}</option><option value="em_andamento" ${a.status==='em_andamento'?'selected':''}>${L?'In progress':'Em andamento'}</option><option value="concluida" ${a.status==='concluida'?'selected':''}>${L?'Completed':'Concluída'}</option><option value="cancelada" ${a.status==='cancelada'?'selected':''}>${L?'Cancelled':'Cancelada'}</option></select></div><div class="ac-field full"><label>${L?'Action plan':'Plano de ação'}</label><input class="ac-input" type="text" placeholder="${L?'Describe the corrective action...':'Descreva a ação corretiva...'}" value="${a.plan}" oninput="actions['${k}'].plan=this.value"></div><div class="ac-field full"><div class="ev-row"><span style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">${L?'Evidence':'Evidência'}</span><button class="btn-clip ${a.evidenceName?'has-file':''}" onclick="triggerActionFile('${k}')" title="${a.evidenceName?a.evidenceName:(L?'Attach evidence':'Anexar evidência')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button><span class="ev-name" id="ev-name-${k}" style="${a.evidenceName?'':'display:none'}">${a.evidenceName?'📎 '+a.evidenceName:''}</span></div></div></div></div>`;
+  }).join('');
+}
+function toggleAP(){apOpen=!apOpen;document.getElementById('ap-body').classList.toggle('open',apOpen);document.getElementById('ap-chev').classList.toggle('open',apOpen);}
+
+// ══════════════════════════════════════════════════
+// DEADLINE
+// ══════════════════════════════════════════════════
+function addM(n){const d=new Date();d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0]}
+function deadMin(){return new Date().toISOString().split('T')[0]}
+function deadMax(p){return p==='oportunidade'?addM(6):p==='moderado'?addM(3):addM(1)}
+function updDeadMax(sel,k){const card=sel.closest('.ac');if(!card)return;const di=card.querySelector('input[type="date"]');if(!di)return;const nm=deadMax(actions[k]?.priority||'iminente');di.max=nm;if(di.value&&di.value>nm){di.value='';actions[k].deadline='';}}
+
+// ══════════════════════════════════════════════════
+// VALIDATION + SAVE
+// ══════════════════════════════════════════════════
+function clearInvalid(el){el.classList.remove('invalid');const e=el.parentElement.querySelector('.field-err');if(e)e.classList.remove('show')}
+function checkSaveReady(){}
+
+function validateFields(){
+  const fields=[{id:'f-inspector',err:'err-inspector'},{id:'f-company',err:'err-company'},{id:'f-date',err:'err-date'},{id:'f-local',err:'err-local'},{id:'f-area',err:'err-area'},{id:'f-resp',err:'err-resp'}];
+  let valid=true;
+  fields.forEach(({id,err})=>{const el=document.getElementById(id);if(!el.value.trim()){el.classList.add('invalid');document.getElementById(err).classList.add('show');valid=false;}});
+  const items=DATA[currentEnv][currentLevel]||[];
+  const allAns=items.length>0&&items.every((_,i)=>checks[gk(currentEnv,currentLevel,i)]);
+  if(!allAns){valid=false;showToast(currentLang==='en'?'Answer all checklist questions first.':'Responda todas as perguntas antes de finalizar.');document.getElementById('checklist-area').scrollIntoView({behavior:'smooth',block:'start'});}
+  else if(!valid){showToast(currentLang==='en'?'Fill in required fields (highlighted in red).':'Preencha os campos obrigatórios em vermelho.');document.getElementById('f-inspector').closest('.card').scrollIntoView({behavior:'smooth',block:'start'});}
+  return valid;
+}
+
+async function saveInspection(){
+  if(!validateFields())return;
+  const rec={id:Date.now().toString(),status:'pending',savedAt:new Date().toISOString(),inspector:document.getElementById('f-inspector').value,company:document.getElementById('f-company').value,date:document.getElementById('f-date').value,local:document.getElementById('f-local').value,area:document.getElementById('f-area').value,responsible:document.getElementById('f-resp').value,env:currentEnv,level:currentLevel,score:document.getElementById('dial-num')?.textContent||'100',answers:{...checks},observations:{...obsMap},actions:{...actions},comments:document.getElementById('generalComments').value};
+  await dbSave(rec);
+
+  const syncBtn=document.getElementById('btn-sync');
+  syncBtn.classList.add('show');
+
+  if(navigator.onLine){
+    syncBtn.classList.add('syncing');
+    const ok=await syncToSP(rec);
+    syncBtn.classList.remove('syncing');
+    if(ok){
+      await dbDelete(rec.id);
+      syncBtn.classList.add('synced');
+      syncBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> <span>${currentLang==='en'?'Synced':'Sincronizado'}</span>`;
+      showToast(currentLang==='en'?'✓ Sent to SharePoint.':'✓ Enviado ao SharePoint.');
+    }else{
+      syncBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> <span>${currentLang==='en'?'Retry':'Retentar'}</span>`;
+      showToast(currentLang==='en'?'Saved locally — tap Retry to sync.':'Salvo localmente — toque Retentar para sincronizar.');
+    }
+  }else{
+    showToast(currentLang==='en'?'Offline — saved locally.':'Offline — salvo localmente.');
+  }
+
+  await updatePendingBadge();
+  const btn=document.getElementById('btn-save');
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${currentLang==='en'?'Saved':'Salvo'}`;
+  btn.style.background='linear-gradient(135deg,#007D58,#005C40)';
+  document.getElementById('btn-share').style.display='inline-flex';
+  window._pdfHTML=buildPDF();
+}
+
+async function manualSync(){
+  const syncBtn=document.getElementById('btn-sync');
+  const L=currentLang==='en';
+  if(!navigator.onLine){showToast(L?'No connection.':'Sem conexão.');return;}
+  syncBtn.classList.add('syncing');
+  const pending=(await dbGetAll()).filter(r=>r.status==='pending');
+  if(!pending.length){
+    syncBtn.classList.remove('syncing');
+    showToast(L?'Nothing to sync.':'Nada para sincronizar.');
+    return;
+  }
+  let synced=0;
+  for(const r of pending){const ok=await syncToSP(r);if(ok){await dbDelete(r.id);synced++;}}
+  syncBtn.classList.remove('syncing');
+  if(synced>0){
+    syncBtn.classList.add('synced');
+    syncBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> <span>${L?'Synced':'Sincronizado'}</span>`;
+    showSyncBanner();
+    showToast(`${synced} ${L?'inspection(s) synced.':'inspeção(ões) sincronizada(s).'}`);
+  }else{
+    showToast(L?'Could not reach SharePoint.':'Não foi possível alcançar o SharePoint.');
+  }
+  await updatePendingBadge();
+}
+
+// ══════════════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════════════
+function resetAll(){
+  if(!confirm(currentLang==='en'?'Clear all answers?':'Limpar todas as respostas?'))return;
+  [checks,obsMap,files,actions].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+  document.getElementById('generalComments').value='';
+  const btn=document.getElementById('btn-save');
+  btn.style.background='';
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span id="btn-lbl-save">${currentLang==='en'?'Finalise inspection':'Finalizar inspeção'}</span>`;
+  const syncBtn=document.getElementById('btn-sync');
+  if(syncBtn){syncBtn.classList.remove('show','synced','syncing');syncBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> <span id="btn-lbl-sync">${currentLang==='en'?'Sync':'Sincronizar'}</span>`;}
+  render();showToast(currentLang==='en'?'Inspection reset.':'Inspeção reiniciada.');
+}
+
+// ══════════════════════════════════════════════════
+// PDF
+// ══════════════════════════════════════════════════
+function buildPDF(){
+  const L=currentLang==='en';
+  const date=document.getElementById('f-date').value?new Date(document.getElementById('f-date').value+'T12:00:00').toLocaleDateString(L?'en-GB':'pt-BR'):new Date().toLocaleDateString(L?'en-GB':'pt-BR');
+  const lm={op:L?'Operational':'Operacional',ta:L?'Supervision':'Supervisão',li:L?'Management':'Gestão'};
+  const rm={S:L?'Yes':'Sim',N:L?'No':'Não',A:'N/A',O:L?'OI':'OM'};
+  const rows=[];
+  Object.keys(DATA).forEach(env=>['op','ta','li'].forEach(lvl=>{const src=(L?DATA_EN:DATA)[env][lvl]||[];src.forEach((q,i)=>{const k=gk(env,lvl,i);if(checks[k])rows.push({ref:gr(env,lvl,i),env:(L?DATA_EN:DATA)[env].label,lvl:lm[lvl],q,resp:rm[checks[k]],obs:obsMap[k]||'',action:actions[k]||null});});}));
+  const noes=rows.filter(r=>r.resp===rm['N']||r.resp===rm['O']);
+  const score=document.getElementById('dial-num')?.textContent||'100';
+  const rHTML=rows.map(r=>`<tr style="background:${r.resp===rm['N']?'#FEF5F5':r.resp===rm['O']?'#F5F3FF':'#fff'}"><td style="font-family:monospace;font-size:10px;color:#5C6B8A">${r.ref}</td><td style="font-size:10px;color:#5C6B8A">${r.env}—${r.lvl}</td><td style="font-size:11px">${r.q}</td><td style="text-align:center;font-weight:700;font-size:11px;color:${r.resp===rm['S']?'#00B38A':r.resp===rm['N']?'#E53935':r.resp===rm['O']?'#7C3AED':'#F59E0B'}">${r.resp}</td><td style="font-size:10px">${r.obs}</td></tr>`).join('');
+  const aHTML=noes.map(r=>{const a=r.action||{};return`<tr><td style="font-family:monospace;font-size:10px">${r.ref}</td><td style="font-size:10px;max-width:180px">${r.q.slice(0,80)+'…'}</td><td style="font-size:10px">${a.resp||'—'}</td><td style="font-size:10px">${a.deadline||'—'}</td><td style="font-size:10px;text-transform:capitalize">${a.priority||'—'}</td><td style="font-size:10px">${a.plan||'—'}</td><td style="font-size:10px">${a.status||'—'}</td></tr>`;}).join('');
+  return`<!DOCTYPE html><html lang="${L?'en':'pt-BR'}"><head><meta charset="UTF-8"><title>HRZ Safety Walk</title><style>body{font-family:Arial,sans-serif;color:#1E264D;margin:0;font-size:12px}.cover{background:linear-gradient(135deg,#16203E,#235D85);color:#fff;padding:40px}.cover h1{font-size:22px;margin:0 0 6px}.cover p{color:rgba(255,255,255,.6);font-size:12px;margin:3px 0}.sp{display:inline-block;background:rgba(255,255,255,.12);color:#fff;font-size:20px;font-weight:800;padding:8px 20px;border-radius:999px;margin-top:10px}.body{padding:28px 40px}.st{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#5C6B8A;margin:22px 0 7px;border-bottom:1px solid #DDE3EE;padding-bottom:4px}table{width:100%;border-collapse:collapse}th{font-size:10px;font-weight:700;text-transform:uppercase;color:#5C6B8A;background:#F2F5F9;padding:6px 8px;text-align:left;border-bottom:1px solid #DDE3EE}td{padding:6px 8px;border-bottom:1px solid #EEF1F7;vertical-align:top}.mg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:6px}.mi label{font-size:9px;font-weight:700;text-transform:uppercase;color:#5C6B8A;display:block;margin-bottom:2px}.mi span{font-size:12px;font-weight:500}.gc{background:#F2F5F9;border-radius:6px;padding:12px;font-size:12px;white-space:pre-wrap}.ft{text-align:center;color:#C8D0E0;font-size:10px;padding:20px 40px;border-top:1px solid #EEF1F7;margin-top:24px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body><div class="cover"><div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:12px">HRZ Energia · Safety Walk</div><h1>${L?'Safety Inspection Report':'Relatório de Inspeção de Segurança'}</h1><p>${L?'Date':'Data'}: ${date} | ${L?'Inspector':'Inspetor'}: ${document.getElementById('f-inspector').value} | ${L?'Location':'Local'}: ${document.getElementById('f-local').value}</p><div class="sp">Score: ${score}%</div></div><div class="body"><div class="st">${L?'Inspection data':'Dados da inspeção'}</div><div class="mg"><div class="mi"><label>${L?'Inspector':'Inspetor'}</label><span>${document.getElementById('f-inspector').value||'—'}</span></div><div class="mi"><label>${L?'Company':'Empresa'}</label><span>${document.getElementById('f-company').value||'—'}</span></div><div class="mi"><label>${L?'Date':'Data'}</label><span>${date}</span></div><div class="mi"><label>${L?'Location':'Local'}</label><span>${document.getElementById('f-local').value||'—'}</span></div><div class="mi"><label>${L?'Area':'Área'}</label><span>${document.getElementById('f-area').value||'—'}</span></div><div class="mi"><label>${L?'Responsible':'Responsável'}</label><span>${document.getElementById('f-resp').value||'—'}</span></div></div><div class="st">${L?'Questions answered':'Perguntas respondidas'} (${rows.length})</div><table><thead><tr><th>Ref.</th><th>${L?'Environment/Level':'Ambiente/Nível'}</th><th>${L?'Question':'Pergunta'}</th><th>${L?'Ans.':'Resp.'}</th><th>${L?'Obs.':'Obs.'}</th></tr></thead><tbody>${rHTML}</tbody></table>${noes.length?`<div class="st">${L?'Action plan':'Plano de ação'} (${noes.length})</div><table><thead><tr><th>Ref.</th><th>${L?'Finding':'NC'}</th><th>${L?'Responsible':'Responsável'}</th><th>${L?'Deadline':'Prazo'}</th><th>${L?'Risk':'Risco'}</th><th>${L?'Plan':'Plano'}</th><th>Status</th></tr></thead><tbody>${aHTML}</tbody></table>`:''}</div><div class="ft">HRZ Energia · ${new Date().toLocaleString(L?'en-GB':'pt-BR')} · ${L?'Internal use':'Uso interno'}</div></body></html>`;
+}
+function exportPDF(){const h=buildPDF();const w=window.open('','_blank');w.document.write(h);w.document.close();w.onload=()=>{w.focus();w.print();document.getElementById('btn-share').style.display='inline-flex';window._pdfHTML=h;};}
+async function shareReport(){const L=currentLang==='en';const date=document.getElementById('f-date').value?new Date(document.getElementById('f-date').value+'T12:00:00').toLocaleDateString(L?'en-GB':'pt-BR'):new Date().toLocaleDateString(L?'en-GB':'pt-BR');const inspector=document.getElementById('f-inspector').value||'Inspector',local=document.getElementById('f-local').value||'Local';const blob=new Blob([window._pdfHTML||''],{type:'text/html'});const file=new File([blob],`HRZ_SafetyWalk_${date.replace(/\//g,'-')}.html`,{type:'text/html'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:`HRZ Safety Walk — ${local} — ${date}`,text:`${L?'Inspection':'Inspeção'}: ${local}\n${L?'Inspector':'Inspetor'}: ${inspector}\n${L?'Date':'Data'}: ${date}`,files:[file]});}else if(navigator.share){await navigator.share({title:`HRZ Safety Walk — ${local} — ${date}`,text:`${local} — ${inspector} — ${date}`});}else{showToast(L?'Sharing not supported.':'Compartilhamento não suportado.');}}
+
+// ══════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════
+let toastT;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200);}
+
+// ══════════════════════════════════════════════════
+// LANGUAGE
+// ══════════════════════════════════════════════════
+function toggleLanguage(){
+  currentLang=currentLang==='pt'?'en':'pt';
+  const L=currentLang==='en';
+  document.getElementById('btn-lang').textContent=L?'PT':'EN';
+  document.getElementById('hdr-title').textContent=L?'Safety Checklist':'Check-list de Segurança';
+  document.getElementById('hdr-sub').textContent=L?'Select environment and level to start.':'Selecione ambiente e nível para iniciar.';
+  document.getElementById('lbl-section-data').textContent=L?'Inspection data':'Dados da inspeção';
+  document.getElementById('lbl-inspector').textContent=L?'Inspector':'Inspetor';
+  document.getElementById('lbl-company').textContent=L?'Company':'Empresa';
+  document.getElementById('lbl-date').textContent=L?'Date':'Data';
+  document.getElementById('lbl-local').textContent=L?'Location / Asset':'Local / Ativo';
+  document.getElementById('lbl-area').textContent=L?'Area':'Área';
+  document.getElementById('lbl-resp').textContent=L?'Local responsible':'Responsável local';
+  document.getElementById('lbl-score-eye').textContent=L?'Safety score':'Score de segurança';
+  document.getElementById('lbl-score-title').textContent=L?'Deduction by identified non-conformities':'Dedução por não conformidades identificadas';
+  document.getElementById('lbl-section-sel').textContent=L?'Inspection setup':'Configuração da inspeção';
+  document.getElementById('lbl-level').textContent=L?'Inspector level / position':'Nível / Posição do inspetor';
+  document.getElementById('lvl-op').textContent=L?'Operational':'Operacional';
+  document.getElementById('lvl-op-sub').textContent=L?'Technicians, Operators':'Técnicos, Operadores';
+  document.getElementById('lvl-ta').textContent=L?'Supervision':'Supervisão';
+  document.getElementById('lvl-ta-sub').textContent=L?'Supervisors, Coords':'Supervisores, Coords';
+  document.getElementById('lvl-li').textContent=L?'Management':'Gestão';
+  document.getElementById('lvl-li-sub').textContent=L?'Managers, Directors':'Gerentes, Diretores';
+  document.getElementById('lbl-env').textContent=L?'Inspected environment':'Ambiente inspecionado';
+  document.getElementById('lbl-risk-legend').textContent=L?'Risk classification legend':'Legenda de classificação de risco';
+  document.getElementById('r-im').textContent=L?'Imminent':'Iminente';
+  document.getElementById('r-im-desc').innerHTML=(L?'Risk of death or immediate serious injury — mandatory activity stoppage.':'Risco de morte ou lesão grave imediata — paralisação obrigatória da atividade.')+'<span class="rded">−10%</span>';
+  document.getElementById('r-se').textContent=L?'Serious':'Sério';
+  document.getElementById('r-se-desc').innerHTML=(L?'Potential for significant injury — urgent action, max. 1 month.':'Potencial de lesão significativa — ação urgente, prazo máx. 1 mês.')+'<span class="rded">−8%</span>';
+  document.getElementById('r-mo').textContent=L?'Moderate':'Moderado';
+  document.getElementById('r-mo-desc').innerHTML=(L?'Deviation without immediate risk — planned action, max. 3 months.':'Desvio sem risco imediato — ação planejada, prazo máx. 3 meses.')+'<span class="rded">−5%</span>';
+  document.getElementById('r-op').textContent=L?'Opportunity':'Oportunidade';
+  document.getElementById('r-op-desc').innerHTML=(L?'No deviation — improvement potential, max. 6 months.':'Sem desvio — potencial de melhoria, prazo máx. 6 meses.')+'<span class="rded">−2%</span>';
+  document.getElementById('lbl-progress').textContent=L?'Progress':'Progresso';
+  document.getElementById('lbl-ap').textContent=L?'Action Plan':'Plano de Ação';
+  document.getElementById('lbl-section-comments').textContent=L?'General comments':'Comentários gerais';
+  document.getElementById('generalComments').placeholder=L?'General observations, recommendations...':'Observações gerais, recomendações, percepções...';
+  document.getElementById('btn-lbl-clear').textContent=L?'Clear':'Limpar';
+  document.getElementById('btn-lbl-share').textContent=L?'Share':'Compartilhar';
+  document.getElementById('btn-lbl-save').textContent=L?'Finalise inspection':'Finalizar inspeção';
+  // Update error messages
+  ['inspector','company','date','local','area','resp'].forEach(f=>{const e=document.getElementById('err-'+f);if(e)e.textContent=L?'Required field':'Campo obrigatório';});
+  refreshTabLabels();
+  render();
+}
+
+// ══════════════════════════════════════════════════
+// BOOT SEGURO PARA SHAREPOINT
+// ══════════════════════════════════════════════════
+window.onerror=function(message,source,line,column,error){
+  console.error('Erro global Safety Walk:', message, 'linha:', line, 'coluna:', column, error);
+};
+
+function showJsBlockedWarning(){
+  const area=document.getElementById('checklist-area');
+  if(area && !area.innerHTML.trim()){
+    area.innerHTML='<div class="empty-state"><b>O checklist não carregou.</b><br>O JavaScript pode estar bloqueado pelo modo de visualização do SharePoint. Abra o arquivo pela biblioteca em modo direto ou hospede em uma página SharePoint com permissão para script.</div>';
+  }
+}
+
+function bootSafetyWalk(){
+  try{
+    initTabs();
+    render();
+    const dateField=document.getElementById('f-date');
+    if(dateField && !dateField.value){ dateField.valueAsDate=new Date(); }
+    if(typeof indexedDB!=='undefined'){
+      openDB().then(function(){
+        updatePendingBadge();
+        updateOnlineStatus();
+      }).catch(function(error){
+        console.warn('IndexedDB não iniciou, mas o app continuará funcionando:', error);
+      });
+    }
+  }catch(error){
+    console.error('Erro ao iniciar o app:', error);
+    showJsBlockedWarning();
+  }
+}
+
+// ══════════════════════════════════════════════════
+// SERVICE WORKER
+// ══════════════════════════════════════════════════
+if(false && 'serviceWorker' in navigator){
+  const swCode=`const C='hrz-v1';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll([location.href])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'/'}).catch(()=>{});
+}
+
+// ══════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', bootSafetyWalk);
+}else{
+  bootSafetyWalk();
+}
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    if(!document.querySelector('#checklist-area .cl-wrap')){
+      bootSafetyWalk();
+    }
+    showJsBlockedWarning();
+  }, 300);
+});
+</script>
+</body>
+</html>

@@ -253,6 +253,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 /* evidence row */
 .ev-row{display:flex;align-items:center;gap:8px}
 .ev-name{font-size:10px;color:var(--sky);font-weight:600}
+.ev-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ev-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(41,168,229,.08);border:1px solid rgba(41,168,229,.22);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--mid);font-weight:500}
+.ev-remove{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 1px;font-weight:700}
+.ev-remove:hover{color:var(--red)}
 
 /* ─── PENDING BADGE ─── */
 .pending{display:none;align-items:center;gap:7px;background:var(--amber-10);border:1px solid var(--amber);color:#92400E;font-size:11px;font-weight:700;padding:9px 12px;border-radius:var(--r);margin-bottom:12px}
@@ -813,19 +817,34 @@ function dbDelete(id){return new Promise((res,rej)=>{const tx=db.transaction(STO
 // ══════════════════════════════════════════════════
 // SHAREPOINT SYNC
 // ══════════════════════════════════════════════════
-const SP_SITE='https://novohorizonpart.sharepoint.com/sites/HRZProcessHub';
-const SP_LIST='SafetyWalk_Inspections';
+const FLOW_URL = 'https://default8b13eaf7b8a04dafb92e2c2fee9823.84.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/37cef869883643ca941a92f63f714726/triggers/manual/paths/invoke?api-version=1';
+
 async function syncToSP(rec){
-  if(!SP_SITE||!SP_LIST)return false;
+
   try{
-    const dr=await fetch(`${SP_SITE}/_api/contextinfo`,{method:'POST',headers:{'Accept':'application/json;odata=verbose'},credentials:'include'});
-    const dd=await dr.json();
-    const digest=dd.d.GetContextWebInformation.FormDigestValue;
-    const body={'__metadata':{'type':`SP.Data.${SP_LIST}ListItem`},'Title':`${rec.local} — ${rec.date}`,'Inspector':rec.inspector,'Company':rec.company,'InspectionDate':rec.date,'Local':rec.local,'Area':rec.area,'Responsible':rec.responsible,'Environment':rec.env,'Level':rec.level,'Score':Number(rec.score),'Answers':JSON.stringify(rec.answers),'Actions':JSON.stringify(rec.actions),'Comments':rec.comments,
-'SyncedAt':new Date().toISOString()};
-    const pr=await fetch(`${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`,{method:'POST',credentials:'include',headers:{'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify(body)});
-    return pr.ok;
-  }catch{return false;}
+
+    const response = await fetch(FLOW_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(rec)
+    });
+
+    if(response.ok){
+      return true;
+    }
+
+    console.log('Erro Power Automate:', response.status);
+    return false;
+
+  }catch(error){
+
+    console.log('Erro envio:', error);
+    return false;
+
+  }
+
 }
 async function syncPending(){
   if(!navigator.onLine)return;
@@ -833,7 +852,7 @@ async function syncPending(){
   if(!pending.length)return;
   let synced=0;
   for(const r of pending){const ok=await syncToSP(r);if(ok){await dbDelete(r.id);synced++;}}
-  if(synced>0){showSyncBanner();updatePendingBadge();}
+  if(synced>0){showSyncBanner();updatePendingBadge();setTimeout(()=>_clearForm(),1500);}
 }
 async function updatePendingBadge(){
   const all=await dbGetAll();
@@ -999,14 +1018,40 @@ function triggerActionFile(k){pendingActionKey=k;const i=document.getElementById
 document.getElementById('action-file-input').addEventListener('change',function(){
   if(!this.files[0]||!pendingActionKey)return;
   const k=pendingActionKey;
-  if(!actions[k])actions[k]={resp:'',deadline:'',priority:'iminente',plan:'',status:'aberta',evidenceName:''};
-  actions[k].evidenceName=this.files[0].name;
-  actions[k].evidenceFile=this.files[0];
-  const card=document.querySelector(`[onclick="triggerActionFile('${k}')"]`)?.closest('.ac');
-  if(card){const btn=card.querySelector('.btn-clip');if(btn){btn.classList.add('has-file');btn.title='Evidência: '+this.files[0].name;}const sp=document.getElementById('ev-name-'+k);if(sp){sp.textContent='📎 '+this.files[0].name;sp.style.display='';}}
-  showToast(currentLang==='en'?'Evidence attached.':'Evidência anexada.');
+  if(!actions[k])actions[k]={resp:'',deadline:'',priority:'iminente',plan:'',status:'aberta',evidences:[]};
+  if(!actions[k].evidences){actions[k].evidences=actions[k].evidenceName?[{name:actions[k].evidenceName,file:null}]:[];}
+  const name=this.files[0].name,file=this.files[0];
+  actions[k].evidences.push({name,file});
+  // Update DOM
+  let evList=document.getElementById('ev-list-'+k);
+  if(!evList){
+    const card=document.querySelector(`[onclick="triggerActionFile('${k}')"]`)?.closest('.ac');
+    if(card){const evRow=card.querySelector('.ev-row');evList=document.createElement('div');evList.id='ev-list-'+k;evList.className='ev-list';evRow.parentElement.appendChild(evList);}
+  }
+  if(evList){
+    const idx=actions[k].evidences.length-1;
+    const tag=document.createElement('span');tag.className='ev-tag';
+    tag.innerHTML=`📎 ${name} <button class="ev-remove" onclick="removeEvidence('${k}',${idx})" title="Remover">×</button>`;
+    evList.appendChild(tag);
+  }
+  const card2=document.querySelector(`[onclick="triggerActionFile('${k}')"]`)?.closest('.ac');
+  if(card2){const btn=card2.querySelector('.btn-clip');if(btn)btn.classList.add('has-file');}
+  showToast(currentLang==='en'?'Evidence added.':'Evidência adicionada.');
   pendingActionKey=null;
 });
+
+function removeEvidence(k,idx){
+  if(!actions[k]?.evidences)return;
+  actions[k].evidences.splice(idx,1);
+  const evList=document.getElementById('ev-list-'+k);
+  if(evList){
+    evList.innerHTML=actions[k].evidences.map((ev,i)=>
+      `<span class="ev-tag">📎 ${ev.name} <button class="ev-remove" onclick="removeEvidence('${k}',${i})" title="Remover">×</button></span>`
+    ).join('');
+    const card=evList.closest('.ac');
+    if(card){const btn=card.querySelector('.btn-clip');if(btn)btn.classList.toggle('has-file',actions[k].evidences.length>0);}
+  }
+}
 
 // ══════════════════════════════════════════════════
 // PROGRESS
@@ -1098,6 +1143,8 @@ function validateFields(){
 
 async function saveInspection(){
   if(!validateFields())return;
+  const btn=document.getElementById('btn-save');
+  btn.disabled=true;
   const rec={id:Date.now().toString(),status:'pending',savedAt:new Date().toISOString(),inspector:document.getElementById('f-inspector').value,company:document.getElementById('f-company').value,date:document.getElementById('f-date').value,local:document.getElementById('f-local').value,area:document.getElementById('f-area').value,responsible:document.getElementById('f-resp').value,env:currentEnv,level:currentLevel,score:document.getElementById('dial-num')?.textContent||'100',answers:{...checks},observations:{...obsMap},actions:{...actions},comments:document.getElementById('generalComments').value};
   await dbSave(rec);
 
@@ -1112,21 +1159,47 @@ async function saveInspection(){
       await dbDelete(rec.id);
       syncBtn.classList.add('synced');
       syncBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> <span>${currentLang==='en'?'Synced':'Sincronizado'}</span>`;
-      showToast(currentLang==='en'?'✓ Sent to SharePoint.':'✓ Enviado ao SharePoint.');
+      showToast(currentLang==='en'?'✓ Saved to SharePoint. Form cleared.':'✓ Gravado no SharePoint. Formulário limpo.');
+      setTimeout(()=>_clearForm(),1500);
     }else{
+      btn.disabled=false;
+      btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span id="btn-lbl-save">${currentLang==='en'?'Finalise inspection':'Finalizar inspeção'}</span>`;
       syncBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> <span>${currentLang==='en'?'Retry':'Retentar'}</span>`;
       showToast(currentLang==='en'?'Saved locally — tap Retry to sync.':'Salvo localmente — toque Retentar para sincronizar.');
     }
   }else{
+    btn.disabled=false;
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span id="btn-lbl-save">${currentLang==='en'?'Finalise inspection':'Finalizar inspeção'}</span>`;
+    syncBtn.classList.add('show');
     showToast(currentLang==='en'?'Offline — saved locally.':'Offline — salvo localmente.');
   }
 
   await updatePendingBadge();
-  const btn=document.getElementById('btn-save');
-  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${currentLang==='en'?'Saved':'Salvo'}`;
-  btn.style.background='linear-gradient(135deg,#007D58,#005C40)';
-  document.getElementById('btn-share').style.display='inline-flex';
   window._pdfHTML=buildPDF();
+}
+
+function _clearForm(){
+  [checks,obsMap,files,actions].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+  document.getElementById('generalComments').value='';
+  document.getElementById('f-inspector').value='';
+  document.getElementById('f-company').value='';
+  document.getElementById('f-date').valueAsDate=new Date();
+  document.getElementById('f-area').value='';
+  document.getElementById('f-resp').value='';
+  // Reset projeto e ativo
+  const selP=document.getElementById('f-projeto');
+  if(selP)selP.selectedIndex=0;
+  const selL=document.getElementById('f-local');
+  if(selL){const L=currentLang==='en';selL.innerHTML=`<option value="">${L?'Select project first...':'Selecione o projeto primeiro...'}</option>`;}
+  else{const fi=document.getElementById('f-local');if(fi)fi.value='';}
+  const btn=document.getElementById('btn-save');
+  btn.disabled=false;btn.style.background='';
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span id="btn-lbl-save">${currentLang==='en'?'Finalise inspection':'Finalizar inspeção'}</span>`;
+  const s=document.getElementById('btn-sync');
+  if(s){s.classList.remove('show','synced','syncing');}
+  document.getElementById('btn-share').style.display='none';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 async function manualSync(){

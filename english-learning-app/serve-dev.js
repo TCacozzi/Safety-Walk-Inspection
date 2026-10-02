@@ -1,13 +1,14 @@
-// Servidor simples para desenvolvimento - sem cache!
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const PORT = 5174; // porta diferente para não conflitar
-const SRC_DIR = path.join(__dirname, 'src');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const PORT = 5174;
 
 const server = http.createServer((req, res) => {
-  // Headers anti-cache agressivos
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -23,7 +24,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Servir arquivos estáticos
   let filePath = path.join(__dirname, req.url);
 
   if (fs.existsSync(filePath)) {

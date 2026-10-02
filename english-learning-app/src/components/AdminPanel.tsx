@@ -350,8 +350,9 @@ Retorne em JSON puro (sem markdown) com esta estrutura:
 
               <div className="image-input">
                 <label>Fazer upload de foto do livro:</label>
-                <div className="file-upload">
+                <div className="file-upload" onClick={() => document.getElementById(`file-input-${selectedSubjectId}`)?.click()}>
                   <input
+                    id={`file-input-${selectedSubjectId}`}
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}

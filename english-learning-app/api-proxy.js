@@ -53,14 +53,17 @@ app.post('/api/generate-exercises', async (req, res) => {
 {
   "questions": [
     {
-      "id": 1,
+      "id": "1",
+      "type": "multiple-choice",
       "question": "Pergunta aqui?",
       "options": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
-      "answer": "A",
+      "answer": "A) Opção 1",
+      "explanation": "Breve explicação de por que essa é a resposta correta",
       "points": 10
     }
   ]
-}`,
+}
+O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options".`,
           },
         ],
       });
@@ -72,14 +75,17 @@ app.post('/api/generate-exercises', async (req, res) => {
 {
   "questions": [
     {
-      "id": 1,
+      "id": "1",
+      "type": "multiple-choice",
       "question": "Pergunta aqui?",
       "options": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
-      "answer": "A",
+      "answer": "A) Opção 1",
+      "explanation": "Breve explicação de por que essa é a resposta correta",
       "points": 10
     }
   ]
-}`,
+}
+O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options".`,
       });
     } else {
       console.log('❌ Sem imagem ou texto');

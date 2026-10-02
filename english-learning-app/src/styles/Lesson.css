@@ -3,7 +3,7 @@
 }
 
 .lesson-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #007bff 0%, #8b5cf6 100%);
   color: white;
   border-radius: 1rem;
   padding: 2rem;
@@ -105,7 +105,7 @@
 .continue-button {
   width: 100%;
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #007bff 0%, #8b5cf6 100%);
   color: white;
   border: none;
   border-radius: 0.75rem;

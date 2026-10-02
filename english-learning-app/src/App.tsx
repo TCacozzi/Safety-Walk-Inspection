@@ -133,7 +133,10 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <div className="header-left">
-            <h1 className="app-title">The Joy School - 3A</h1>
+            <div className="app-brand">
+              <img src="/logo.webp" alt="Manda Bem!" className="app-logo" />
+              <h1 className="app-title">Manda Bem!</h1>
+            </div>
             {studentProfile && (studentProfile.school || studentProfile.grade) && (
               <p className="header-school-info">
                 {studentProfile.school}
@@ -212,7 +215,7 @@ function App() {
 
       <footer className="app-footer">
         <p>
-          Personalized Study App for Lorenzo Cacozzi | Made with ❤️ by Claude
+          Manda Bem! | Personalized Study App for Lorenzo Cacozzi
         </p>
       </footer>
     </div>

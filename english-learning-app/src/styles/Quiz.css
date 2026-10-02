@@ -90,7 +90,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #007bff 0%, #8b5cf6 100%);
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -316,7 +316,7 @@
 .next-button {
   width: 100%;
   padding: 1.25rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #007bff 0%, #8b5cf6 100%);
   color: white;
   border: none;
   border-radius: 0.75rem;

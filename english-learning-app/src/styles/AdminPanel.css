@@ -40,7 +40,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #007bff 0%, #00d1ff 100%);
   color: white;
   border-radius: 1rem 1rem 0 0;
   position: sticky;
@@ -139,7 +139,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #007bff 0%, #00d1ff 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -188,11 +188,11 @@
 }
 
 .subject-item:hover {
-  border-color: #3b82f6;
+  border-color: #00d1ff;
 }
 
 .subject-item.selected {
-  border-color: #1e40af;
+  border-color: #007bff;
   background: rgba(30, 64, 175, 0.05);
 }
 
@@ -249,7 +249,7 @@
 }
 
 .file-upload {
-  border: 2px dashed #3b82f6;
+  border: 2px dashed #00d1ff;
   border-radius: 0.75rem;
   padding: 2rem;
   text-align: center;
@@ -260,7 +260,7 @@
 
 .file-upload:hover {
   background: rgba(59, 130, 246, 0.1);
-  border-color: #1e40af;
+  border-color: #007bff;
 }
 
 .file-upload input {

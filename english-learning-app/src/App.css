@@ -1,16 +1,20 @@
 :root {
-  --primary: #1e40af;
-  --primary-light: #3b82f6;
-  --secondary: #0c4a6e;
-  --accent: #0369a1;
-  --success: #10b981;
-  --danger: #ef4444;
+  --primary: #007bff;
+  --primary-light: #00d1ff;
+  --secondary: #0f2a5b;
+  --accent: #ff8a00;
+  --yellow: #ffc107;
+  --purple: #8b5cf6;
+  --pink: #ff6b9d;
+  --turquoise: #00c2a8;
+  --success: #2ecc71;
+  --danger: #ff5252;
   --bg: #ffffff;
-  --bg-secondary: #f9fafb;
-  --text: #1f2937;
-  --text-secondary: #6b7280;
-  --border: #e5e7eb;
-  --shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.2);
+  --bg-secondary: #f8fafc;
+  --text: #0f2a5b;
+  --text-secondary: #475569;
+  --border: #e2e8f0;
+  --shadow: 0 10px 25px -5px rgba(0, 123, 255, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -39,7 +43,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #1e40af 0%, #0c4a6e 100%);
+  background: linear-gradient(135deg, #007bff 0%, #0f2a5b 100%);
   color: var(--text);
 }
 
@@ -51,7 +55,7 @@ body {
 }
 
 .app-header {
-  background: linear-gradient(135deg, #1e40af 0%, #0c4a6e 100%);
+  background: linear-gradient(135deg, #007bff 0%, #0f2a5b 100%);
   color: white;
   padding: 1.5rem;
   box-shadow: var(--shadow);
@@ -74,6 +78,19 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-logo {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+  border-radius: 0.75rem;
 }
 
 .app-title {
@@ -172,6 +189,11 @@ body {
 
   .app-title {
     font-size: 1.5rem;
+  }
+
+  .app-logo {
+    height: 36px;
+    width: 36px;
   }
 
   .header-stats {

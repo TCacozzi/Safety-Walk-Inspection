@@ -18,11 +18,14 @@ app.post('/api/generate-exercises', async (req, res) => {
       return res.status(400).json({ error: 'API Key é obrigatória' });
     }
 
-    let prompt = 'Analise este conteúdo educacional e gere 10 exercícios de múltipla escolha em JSON.\n\n';
+    const instructions = 'Você é um professor de inglês preparando uma prova de revisão para um aluno. Leia e entenda cuidadosamente TODO o conteúdo fornecido (é uma prova/material de inglês) antes de criar as perguntas.\n\n' +
+      'Gere NO MÍNIMO 30 exercícios de múltipla escolha, todos diretamente correlacionados ao conteúdo fornecido (vocabulário, gramática, textos, diálogos, exercícios que aparecem no material). Não invente temas que não estejam no material. Varie o foco das perguntas (vocabulário, gramática, compreensão de texto, tradução) sempre com base no que está no conteúdo.\n\n';
+
+    let prompt = instructions;
     const messages = [];
 
     if (imageBase64) {
-      prompt = 'Analise esta imagem do livro/material de estudo e gere 10 exercícios de múltipla escolha em JSON.\n\n';
+      prompt = instructions;
 
       const ext = (fileExtension || 'jpeg').toLowerCase();
       const mediaTypeMap = {
@@ -63,7 +66,7 @@ app.post('/api/generate-exercises', async (req, res) => {
     }
   ]
 }
-O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options".`,
+O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
           },
         ],
       });
@@ -85,7 +88,7 @@ O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXAT
     }
   ]
 }
-O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options".`,
+O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
       });
     } else {
       console.log('❌ Sem imagem ou texto');
@@ -103,7 +106,7 @@ O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXAT
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 8192,
         messages: messages,
       }),
     });

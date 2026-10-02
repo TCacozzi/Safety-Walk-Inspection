@@ -57,12 +57,13 @@ export function AdminPanel({
     const reader = new FileReader();
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1];
-      await generateExercisesFromImage(base64);
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpeg';
+      await generateExercisesFromImage(base64, ext);
     };
     reader.readAsDataURL(file);
   };
 
-  const generateExercisesFromImage = async (base64: string) => {
+  const generateExercisesFromImage = async (base64: string, fileExt: string = 'jpeg') => {
     const savedApiKey = localStorage.getItem('claudeApiKey');
     if (!savedApiKey) {
       alert('Configure a API Key primeiro!');
@@ -80,6 +81,7 @@ export function AdminPanel({
         },
         body: JSON.stringify({
           imageBase64: base64,
+          fileExtension: fileExt,
           apiKey: savedApiKey,
         }),
       });

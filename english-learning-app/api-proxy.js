@@ -10,7 +10,7 @@ app.use(express.json({ limit: '50mb' }));
 
 app.post('/api/generate-exercises', async (req, res) => {
   try {
-    const { imageBase64, textReference, apiKey } = req.body;
+    const { imageBase64, fileExtension, textReference, apiKey } = req.body;
 
     if (!apiKey) {
       return res.status(400).json({ error: 'API Key é obrigatória' });
@@ -22,8 +22,18 @@ app.post('/api/generate-exercises', async (req, res) => {
     if (imageBase64) {
       prompt = 'Analise esta imagem do livro/material de estudo e gere 10 exercícios de múltipla escolha em JSON.\n\n';
 
-      // Detectar tipo de imagem (PNG ou JPEG)
-      const mediaType = imageBase64.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+      // Detectar tipo de imagem pela extensão do arquivo
+      const ext = (fileExtension || 'jpeg').toLowerCase();
+      const mediaTypeMap = {
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+      };
+      const mediaType = mediaTypeMap[ext] || 'image/jpeg';
+
+      console.log(`Processando imagem: tipo=${mediaType}, extensão=${ext}`);
 
       messages.push({
         role: 'user',
@@ -73,6 +83,8 @@ app.post('/api/generate-exercises', async (req, res) => {
       return res.status(400).json({ error: 'Imagem ou texto é obrigatório' });
     }
 
+    console.log('Enviando para API Claude...');
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -89,11 +101,12 @@ app.post('/api/generate-exercises', async (req, res) => {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('API Error:', error);
+      console.error('API Error Response:', error);
       return res.status(response.status).json({ error: 'Erro na API Claude', details: error });
     }
 
     const data = await response.json();
+    console.log('Sucesso! Resposta da API recebida.');
     res.json(data);
   } catch (error) {
     console.error('Server Error:', error);

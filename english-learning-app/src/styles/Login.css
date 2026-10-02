@@ -25,14 +25,14 @@
 .login-card {
   background: var(--bg);
   border-radius: 1.5rem;
-  padding: 2.5rem 2rem;
+  padding: 2.5rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 760px;
   box-shadow: 0 25px 60px -12px rgba(15, 42, 91, 0.4);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 1.25rem;
+  gap: 2.5rem;
   animation: loginCardIn 0.4s ease-out;
 }
 
@@ -47,11 +47,28 @@
   }
 }
 
+.login-brand {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .login-logo {
-  width: 180px;
-  height: 180px;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
   object-fit: contain;
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+}
+
+.login-form-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
 .login-title {
@@ -113,27 +130,29 @@
   box-shadow: 0 10px 25px -5px rgba(0, 123, 255, 0.4);
 }
 
-.login-toggle-mode {
+.login-admin-link {
   background: none;
   border: none;
-  color: var(--primary);
+  color: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   padding: 0.5rem;
 }
 
-.login-toggle-mode:hover {
+.login-admin-link:hover {
+  color: var(--primary);
   text-decoration: underline;
 }
 
-@media (max-width: 480px) {
-  .login-logo {
-    width: 140px;
-    height: 140px;
+@media (max-width: 640px) {
+  .login-card {
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
   }
 
-  .login-card {
-    padding: 2rem 1.5rem;
+  .login-logo {
+    max-width: 160px;
   }
 }

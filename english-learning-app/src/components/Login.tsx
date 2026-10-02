@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { LoginCredentials } from '../types';
+import { validateLogin, getUsers } from '../utils/userAccounts';
+import { AdminUsersPanel } from './AdminUsersPanel';
 import '../styles/Login.css';
 
 interface LoginProps {
@@ -7,23 +8,22 @@ interface LoginProps {
 }
 
 export function Login({ onLoginSuccess }: LoginProps) {
-  const hasAccount = !!localStorage.getItem('loginCredentials');
-
-  const [mode, setMode] = useState<'login' | 'create'>(hasAccount ? 'login' : 'create');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  const handleLogin = () => {
-    const saved = localStorage.getItem('loginCredentials');
-    if (!saved) {
-      setError('Nenhuma conta criada ainda.');
+  const hasUsers = getUsers().length > 0;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!hasUsers) {
+      setError('Nenhum usuário cadastrado. Peça ao seu responsável para criar seu acesso em "Acesso Administrador".');
       return;
     }
 
-    const credentials: LoginCredentials = JSON.parse(saved);
-    if (username.trim() === credentials.username && password === credentials.password) {
+    if (validateLogin(username.trim(), password)) {
       setError('');
       onLoginSuccess();
     } else {
@@ -31,82 +31,45 @@ export function Login({ onLoginSuccess }: LoginProps) {
     }
   };
 
-  const handleCreateAccount = () => {
-    if (!username.trim() || !password) {
-      setError('Preencha usuário e senha.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('As senhas não conferem.');
-      return;
-    }
-
-    const credentials: LoginCredentials = { username: username.trim(), password };
-    localStorage.setItem('loginCredentials', JSON.stringify(credentials));
-    setError('');
-    onLoginSuccess();
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mode === 'login') {
-      handleLogin();
-    } else {
-      handleCreateAccount();
-    }
-  };
-
   return (
     <div className="login-page">
       <div className="login-card">
-        <img src="/logo.webp" alt="Manda Bem!" className="login-logo" />
+        <div className="login-brand">
+          <img src="/logo.webp" alt="Manda Bem!" className="login-logo" />
+        </div>
 
-        <h2 className="login-title">
-          {mode === 'login' ? 'Bem-vindo de volta!' : 'Vamos criar sua conta!'}
-        </h2>
+        <div className="login-form-side">
+          <h2 className="login-title">Bem-vindo de volta!</h2>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Usuário"
-            autoFocus
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Senha"
-          />
-          {mode === 'create' && (
+          <form className="login-form" onSubmit={handleSubmit}>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Usuário"
+              autoFocus
+            />
             <input
               type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmar Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Senha"
             />
-          )}
 
-          {error && <p className="login-error">{error}</p>}
+            {error && <p className="login-error">{error}</p>}
 
-          <button type="submit" className="login-submit">
-            {mode === 'login' ? 'Entrar 🚀' : 'Criar Conta 🎉'}
+            <button type="submit" className="login-submit">
+              Entrar 🚀
+            </button>
+          </form>
+
+          <button className="login-admin-link" onClick={() => setShowAdminPanel(true)}>
+            🔐 Acesso Administrador
           </button>
-        </form>
-
-        {hasAccount && (
-          <button
-            className="login-toggle-mode"
-            onClick={() => {
-              setMode(mode === 'login' ? 'create' : 'login');
-              setError('');
-            }}
-          >
-            {mode === 'login' ? 'Criar uma nova conta' : 'Já tenho uma conta'}
-          </button>
-        )}
+        </div>
       </div>
+
+      {showAdminPanel && <AdminUsersPanel onClose={() => setShowAdminPanel(false)} />}
     </div>
   );
 }

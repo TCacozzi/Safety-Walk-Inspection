@@ -39,7 +39,8 @@ export interface StudentProfile {
   photo: string;
 }
 
-export interface LoginCredentials {
+export interface UserAccount {
+  id: string;
   username: string;
   password: string;
 }

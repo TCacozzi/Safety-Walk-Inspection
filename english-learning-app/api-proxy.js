@@ -54,7 +54,8 @@ app.post('/api/generate-exercises', async (req, res) => {
             type: 'text',
             text: prompt + `Retorne APENAS um JSON válido com esta estrutura:
 {
-  "topics": ["Tema 1 estudado no material", "Tema 2 estudado no material", "..."],
+  "summary": "Um parágrafo curto (2 a 4 frases) resumindo, em português, o que esse material/prova aborda no geral",
+  "topics": ["Tema 1 estudado no material: breve explicação de 1 frase do que é cobrado", "Tema 2 estudado no material: breve explicação de 1 frase", "..."],
   "questions": [
     {
       "id": "1",
@@ -68,7 +69,7 @@ app.post('/api/generate-exercises', async (req, res) => {
     }
   ]
 }
-O campo "topics" é uma lista curta (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada um uma frase curta (ex: "Verbo TO BE no presente", "Vocabulário de matérias escolares"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+O campo "summary" é um resumo geral e curto do material, em português. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada item combinando o nome do tema com uma breve explicação do que será cobrado sobre ele (ex: "Verbo TO BE no presente: usar am/is/are com os pronomes corretos"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
           },
         ],
       });
@@ -78,7 +79,8 @@ O campo "topics" é uma lista curta (4 a 10 itens) dos temas/assuntos que aparec
         role: 'user',
         content: prompt + `Conteúdo:\n${textReference}\n\nRetorne APENAS um JSON válido com esta estrutura:
 {
-  "topics": ["Tema 1 estudado no material", "Tema 2 estudado no material", "..."],
+  "summary": "Um parágrafo curto (2 a 4 frases) resumindo, em português, o que esse material/prova aborda no geral",
+  "topics": ["Tema 1 estudado no material: breve explicação de 1 frase do que é cobrado", "Tema 2 estudado no material: breve explicação de 1 frase", "..."],
   "questions": [
     {
       "id": "1",
@@ -92,7 +94,7 @@ O campo "topics" é uma lista curta (4 a 10 itens) dos temas/assuntos que aparec
     }
   ]
 }
-O campo "topics" é uma lista curta (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada um uma frase curta (ex: "Verbo TO BE no presente", "Vocabulário de matérias escolares"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+O campo "summary" é um resumo geral e curto do material, em português. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada item combinando o nome do tema com uma breve explicação do que será cobrado sobre ele (ex: "Verbo TO BE no presente: usar am/is/are com os pronomes corretos"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
       });
     } else {
       console.log('❌ Sem imagem ou texto');

@@ -70,10 +70,28 @@ body {
   gap: 1rem;
 }
 
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .app-title {
   font-size: 1.875rem;
   font-weight: bold;
   letter-spacing: -0.05em;
+}
+
+.header-school-info {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .header-stats {
@@ -87,6 +105,46 @@ body {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-weight: 600;
+}
+
+.student-avatar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 1rem 0.4rem 0.4rem;
+  cursor: pointer;
+  color: white;
+  transition: background 0.2s;
+}
+
+.student-avatar:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.student-avatar img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.student-name {
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .app-main {
@@ -123,6 +181,12 @@ body {
 
   .header-content {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .app-main {

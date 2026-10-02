@@ -3,7 +3,8 @@ import { AdminPanel } from './components/AdminPanel';
 import { SubjectSelector } from './components/SubjectSelector';
 import { Lesson } from './components/Lesson';
 import { ParentAccess } from './components/ParentAccess';
-import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType } from './types';
+import { StudentProfileSetup } from './components/StudentProfileSetup';
+import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile } from './types';
 import './App.css';
 
 type Screen = 'admin' | 'selector' | 'lesson' | 'parent';
@@ -13,12 +14,19 @@ function App() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   // Load subjects and progress from localStorage
   useEffect(() => {
     const savedSubjects = localStorage.getItem('lorenzoDynamicSubjects');
     if (savedSubjects) {
       setSubjects(JSON.parse(savedSubjects));
+    }
+
+    const savedProfile = localStorage.getItem('studentProfile');
+    if (savedProfile) {
+      setStudentProfile(JSON.parse(savedProfile));
     }
 
     const savedProgress = localStorage.getItem('lorenzoDynamicProgress');
@@ -38,6 +46,11 @@ function App() {
       localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(newProgress));
     }
   }, []);
+
+  const handleSaveProfile = (profile: StudentProfile) => {
+    setStudentProfile(profile);
+    localStorage.setItem('studentProfile', JSON.stringify(profile));
+  };
 
   const handleAddSubject = (subject: Subject) => {
     const updated = [...subjects, subject];
@@ -109,6 +122,7 @@ function App() {
       title: subject.name,
       description: subject.description || '',
       content: subject.content || '',
+      summary: subject.summary,
       topics: subject.topics,
       questions: subject.questions,
     };
@@ -118,15 +132,45 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">The Joy School - 3A</h1>
-          {progress && (
-            <div className="header-stats">
-              <span className="stat">📚 Matérias: {subjects.filter((s) => s.enabled).length}</span>
-              <span className="stat">⭐ Pontos: {progress.totalPoints}</span>
-            </div>
-          )}
+          <div className="header-left">
+            <h1 className="app-title">The Joy School - 3A</h1>
+            {studentProfile && (studentProfile.school || studentProfile.grade) && (
+              <p className="header-school-info">
+                {studentProfile.school}
+                {studentProfile.school && studentProfile.grade ? ' • ' : ''}
+                {studentProfile.grade}
+              </p>
+            )}
+          </div>
+
+          <div className="header-right">
+            {progress && (
+              <div className="header-stats">
+                <span className="stat">📚 Matérias: {subjects.filter((s) => s.enabled).length}</span>
+                <span className="stat">⭐ Pontos: {progress.totalPoints}</span>
+              </div>
+            )}
+            <button className="student-avatar" onClick={() => setShowProfileSetup(true)}>
+              {studentProfile?.photo ? (
+                <img src={studentProfile.photo} alt={studentProfile.name} />
+              ) : (
+                <span className="avatar-placeholder">👤</span>
+              )}
+              <span className="student-name">
+                {studentProfile?.name || 'Configurar Perfil'}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
+
+      {showProfileSetup && (
+        <StudentProfileSetup
+          profile={studentProfile}
+          onSave={handleSaveProfile}
+          onClose={() => setShowProfileSetup(false)}
+        />
+      )}
 
       <main className="app-main">
         {currentScreen === 'admin' && (

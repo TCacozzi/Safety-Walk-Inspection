@@ -14,6 +14,7 @@ export interface Subject {
   name: string;
   description?: string;
   content?: string;
+  summary?: string;
   topics?: string[];
   questions: Question[];
   createdAt: Date;
@@ -26,8 +27,16 @@ export interface Lesson {
   title: string;
   description: string;
   content: string;
+  summary?: string;
   topics?: string[];
   questions: Question[];
+}
+
+export interface StudentProfile {
+  name: string;
+  grade: string;
+  school: string;
+  photo: string;
 }
 
 export interface UserProgress {

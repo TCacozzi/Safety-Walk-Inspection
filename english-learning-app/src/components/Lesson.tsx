@@ -80,11 +80,12 @@ export const Lesson: React.FC<LessonProps> = ({
         {lesson.description && <p className="lesson-description">{lesson.description}</p>}
       </div>
 
-      {lesson.topics && lesson.topics.length > 0 && (
+      {(lesson.summary || (lesson.topics && lesson.topics.length > 0)) && (
         <div className="lesson-content">
-          <h3>Temas que vamos estudar:</h3>
+          {lesson.summary && <p className="lesson-summary">{lesson.summary}</p>}
+          {lesson.topics && lesson.topics.length > 0 && <h3>Temas que vamos estudar:</h3>}
           <ul>
-            {lesson.topics.map((topic, index) => (
+            {lesson.topics?.map((topic, index) => (
               <li key={index}>{topic}</li>
             ))}
           </ul>

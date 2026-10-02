@@ -121,6 +121,7 @@ export function AdminPanel({
         const updatedSubject: Subject = {
           ...subject,
           content: imageFile?.name || 'Imagem',
+          summary: parsed.summary || '',
           topics: parsed.topics || [],
           questions: parsed.questions,
           enabled: true,
@@ -177,6 +178,7 @@ export function AdminPanel({
         const updatedSubject: Subject = {
           ...subject,
           content: referenceText,
+          summary: parsed.summary || '',
           topics: parsed.topics || [],
           questions: parsed.questions,
           enabled: true,

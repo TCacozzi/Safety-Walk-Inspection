@@ -2,56 +2,141 @@ import { useState } from 'react';
 import type { Question, ExerciseResult } from '../types';
 import '../styles/Quiz.css';
 
+interface QuizProgress {
+  currentIndex: number;
+  answers: Record<string, string>;
+  results: ExerciseResult[];
+}
+
 interface QuizProps {
+  subjectId: string;
   questions: Question[];
   onComplete: (results: ExerciseResult[]) => void;
   onBack: () => void;
+  onExit: () => void;
 }
 
-export const Quiz: React.FC<QuizProps> = ({ questions, onComplete, onBack }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+const getStorageKey = (subjectId: string) => `quizProgress_${subjectId}`;
+
+const loadProgress = (subjectId: string): QuizProgress => {
+  const saved = localStorage.getItem(getStorageKey(subjectId));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        currentIndex: parsed.currentIndex ?? 0,
+        answers: parsed.answers ?? {},
+        results: parsed.results ?? [],
+      };
+    } catch {
+      return { currentIndex: 0, answers: {}, results: [] };
+    }
+  }
+  return { currentIndex: 0, answers: {}, results: [] };
+};
+
+export const Quiz: React.FC<QuizProps> = ({
+  subjectId,
+  questions,
+  onComplete,
+  onBack,
+  onExit,
+}) => {
+  const initialProgress = loadProgress(subjectId);
+
+  const [currentIndex, setCurrentIndex] = useState(initialProgress.currentIndex);
+  const [answers, setAnswers] = useState<Record<string, string>>(initialProgress.answers);
+  const [results, setResults] = useState<ExerciseResult[]>(initialProgress.results);
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
-  const [results, setResults] = useState<ExerciseResult[]>([]);
+  const [showQuestion, setShowQuestion] = useState(false);
 
   const currentQuestion = questions[currentIndex];
   const isAnswered = answers[currentQuestion.id] !== undefined;
   const userAnswer = answers[currentQuestion.id];
   const isCorrect = userAnswer === currentQuestion.answer.toString();
 
+  const saveProgress = (next: QuizProgress) => {
+    localStorage.setItem(getStorageKey(subjectId), JSON.stringify(next));
+  };
+
+  const handleExit = () => {
+    saveProgress({ currentIndex, answers, results });
+    onExit();
+  };
+
   const handleAnswer = (value: string) => {
     if (!isAnswered) {
-      setAnswers({ ...answers, [currentQuestion.id]: value });
+      const updatedAnswers = { ...answers, [currentQuestion.id]: value };
+      setAnswers(updatedAnswers);
+      saveProgress({ currentIndex, answers: updatedAnswers, results });
     }
   };
 
   const handleNext = () => {
     if (!isAnswered) return;
 
-    const isCorrect = userAnswer === currentQuestion.answer.toString();
+    const isCorrectAnswer = userAnswer === currentQuestion.answer.toString();
     const result: ExerciseResult = {
       questionId: currentQuestion.id,
       answered: true,
       userAnswer,
-      correct: isCorrect,
-      points: isCorrect ? currentQuestion.points : 0,
+      correct: isCorrectAnswer,
+      points: isCorrectAnswer ? currentQuestion.points : 0,
     };
 
-    results.push(result);
-    setResults([...results]);
+    const updatedResults = [...results, result];
+    setResults(updatedResults);
     setShowFeedback(currentQuestion.explanation);
 
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+        const nextIndex = currentIndex + 1;
+        setCurrentIndex(nextIndex);
         setShowFeedback(null);
+        setShowQuestion(false);
+        saveProgress({ currentIndex: nextIndex, answers, results: updatedResults });
       } else {
-        onComplete(results);
+        localStorage.removeItem(getStorageKey(subjectId));
+        onComplete(updatedResults);
       }
     }, 2000);
   };
 
   const progress = ((currentIndex + 1) / questions.length) * 100;
+
+  if (!showQuestion && currentQuestion.context) {
+    return (
+      <div className="quiz-container">
+        <div className="quiz-header">
+          <button className="back-button" onClick={onBack}>
+            ← Back
+          </button>
+          <h2>Exercise Time!</h2>
+          <button className="exit-button" onClick={handleExit}>
+            Sair e Salvar 💾
+          </button>
+        </div>
+
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+
+        <div className="question-info">
+          <span className="question-number">
+            Question {currentIndex + 1} / {questions.length}
+          </span>
+        </div>
+
+        <div className="context-card">
+          <h3>📘 Antes de responder...</h3>
+          <p className="context-text">{currentQuestion.context}</p>
+          <button className="next-button" onClick={() => setShowQuestion(true)}>
+            Ver Pergunta →
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="quiz-container">
@@ -60,6 +145,9 @@ export const Quiz: React.FC<QuizProps> = ({ questions, onComplete, onBack }) => 
           ← Back
         </button>
         <h2>Exercise Time!</h2>
+        <button className="exit-button" onClick={handleExit}>
+          Sair e Salvar 💾
+        </button>
       </div>
 
       <div className="progress-bar">

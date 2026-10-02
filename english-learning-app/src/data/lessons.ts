@@ -22,6 +22,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd1-q1',
         type: 'multiple-choice',
+        context: '',
         question: 'Complete: I _____ happy today.',
         options: ['am', 'is', 'are'],
         answer: 'am',
@@ -31,6 +32,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd1-q2',
         type: 'multiple-choice',
+        context: '',
         question: 'Complete: She _____ my teacher.',
         options: ['am', 'is', 'are'],
         answer: 'is',
@@ -40,6 +42,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd1-q3',
         type: 'multiple-choice',
+        context: '',
         question: 'Complete: They _____ at school.',
         options: ['am', 'is', 'are'],
         answer: 'are',
@@ -49,6 +52,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd1-q4',
         type: 'fill-blank',
+        context: '',
         question: 'I _____ a student.',
         answer: 'am',
         explanation: 'Personal pronoun "I" uses "am"',
@@ -57,6 +61,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd1-q5',
         type: 'true-false',
+        context: '',
         question: 'True or False: "He are happy" is correct.',
         answer: 'false',
         explanation: 'False. "He" uses "is": He is happy.',
@@ -84,6 +89,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd2-q1',
         type: 'multiple-choice',
+        context: '',
         question: 'She _____ at school today. (present)',
         options: ['is', 'was', 'are'],
         answer: 'is',
@@ -93,6 +99,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd2-q2',
         type: 'multiple-choice',
+        context: '',
         question: 'She _____ at the zoo yesterday. (past)',
         options: ['is', 'was', 'are'],
         answer: 'was',
@@ -102,6 +109,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd2-q3',
         type: 'multiple-choice',
+        context: '',
         question: 'They _____ at the park yesterday.',
         options: ['are', 'were', 'is'],
         answer: 'were',
@@ -111,6 +119,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd2-q4',
         type: 'true-false',
+        context: '',
         question: 'True or False: "I am at home yesterday" is correct.',
         answer: 'false',
         explanation: 'False. For past: "I was at home yesterday"',
@@ -136,6 +145,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd3-q1',
         type: 'multiple-choice',
+        context: '',
         question: 'I _____ ride a bike.',
         options: ['can', 'have', 'am'],
         answer: 'can',
@@ -145,6 +155,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd3-q2',
         type: 'multiple-choice',
+        context: '',
         question: 'We _____ two books.',
         options: ['can', 'have', 'are'],
         answer: 'have',
@@ -154,6 +165,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd3-q3',
         type: 'fill-blank',
+        context: '',
         question: 'They _____ play soccer.',
         answer: 'can',
         explanation: '"can" expresses ability',
@@ -179,6 +191,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd4-q1',
         type: 'multiple-choice',
+        context: '',
         question: 'I _____ do my homework.',
         options: ['must', "mustn't", 'can'],
         answer: 'must',
@@ -188,6 +201,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd4-q2',
         type: 'multiple-choice',
+        context: '',
         question: 'You _____ run in the classroom.',
         options: ['must', "mustn't", 'can'],
         answer: "mustn't",
@@ -197,6 +211,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd4-q3',
         type: 'fill-blank',
+        context: '',
         question: 'We _____ respect our teachers.',
         answer: 'must',
         explanation: '"must" for obligations',
@@ -223,6 +238,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd5-q1',
         type: 'multiple-choice',
+        context: '',
         question: 'This book is very _____.',
         options: ['readable', 'reading', 'read'],
         answer: 'readable',
@@ -232,6 +248,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd5-q2',
         type: 'multiple-choice',
+        context: '',
         question: 'The chair is _____.',
         options: ['comfortable', 'comfort', 'comforting'],
         answer: 'comfortable',
@@ -241,6 +258,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd5-q3',
         type: 'fill-blank',
+        context: '',
         question: 'My bike is broken, but it is _____. (fix + able)',
         answer: 'fixable',
         explanation: 'fix + able = fixable',
@@ -266,6 +284,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd6-q1',
         type: 'order-words',
+        context: '',
         question: 'Put in correct order: must / I / study',
         answer: 'I must study',
         explanation: 'Correct order: subject + verb + object',
@@ -274,6 +293,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd6-q2',
         type: 'order-words',
+        context: '',
         question: 'Put in correct order: is / She / happy',
         answer: 'She is happy',
         explanation: 'Subject + "to be" + adjective',
@@ -282,6 +302,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd6-q3',
         type: 'order-words',
+        context: '',
         question: 'Put in correct order: can / They / swim',
         answer: 'They can swim',
         explanation: 'Subject + can + verb',
@@ -309,6 +330,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd7-q1',
         type: 'multiple-choice',
+        context: '',
         question: 'She _____ my friend.',
         options: ['am', 'is', 'are'],
         answer: 'is',
@@ -318,6 +340,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd7-q2',
         type: 'multiple-choice',
+        context: '',
         question: 'They _____ at the zoo yesterday.',
         options: ['was', 'were', 'are'],
         answer: 'were',
@@ -327,6 +350,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd7-q3',
         type: 'multiple-choice',
+        context: '',
         question: 'I _____ do my homework.',
         options: ['must', "mustn't", 'can'],
         answer: 'must',
@@ -336,6 +360,7 @@ export const lessons: Lesson[] = [
       {
         id: 'd7-q4',
         type: 'multiple-choice',
+        context: '',
         question: 'This chair is very _____.',
         options: ['comfort', 'comfortable', 'comforting'],
         answer: 'comfortable',

@@ -7,12 +7,14 @@ interface LessonProps {
   lesson: LessonType;
   onBack: () => void;
   onComplete: (day: number, results: ExerciseResult[]) => void;
+  onExitToMenu: () => void;
 }
 
 export const Lesson: React.FC<LessonProps> = ({
   lesson,
   onBack,
   onComplete,
+  onExitToMenu,
 }) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
@@ -30,9 +32,11 @@ export const Lesson: React.FC<LessonProps> = ({
   if (showQuiz && !quizComplete) {
     return (
       <Quiz
+        subjectId={lesson.id}
         questions={lesson.questions}
         onComplete={handleQuizComplete}
         onBack={() => setShowQuiz(false)}
+        onExit={onExitToMenu}
       />
     );
   }
@@ -106,7 +110,9 @@ export const Lesson: React.FC<LessonProps> = ({
         </div>
       ) : (
         <button className="start-quiz-button" onClick={() => setShowQuiz(true)}>
-          Start Exercise! 🚀
+          {localStorage.getItem(`quizProgress_${lesson.id}`)
+            ? 'Continuar de Onde Parou ▶️'
+            : 'Start Exercise! 🚀'}
         </button>
       )}
     </div>

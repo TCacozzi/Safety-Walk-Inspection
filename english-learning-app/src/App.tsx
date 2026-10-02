@@ -65,7 +65,7 @@ function App() {
     setCurrentScreen('selector');
   };
 
-  const handleLessonComplete = (day: number, results: ExerciseResult[]) => {
+  const handleLessonComplete = (_day: number, results: ExerciseResult[]) => {
     if (!progress || !selectedSubject) return;
 
     const totalPoints = results.reduce((sum, r) => sum + r.points, 0);
@@ -133,6 +133,7 @@ function App() {
             lesson={convertSubjectToLesson(selectedSubject)}
             onBack={handleBackToSelector}
             onComplete={handleLessonComplete}
+            onExitToMenu={handleBackToSelector}
           />
         )}
       </main>

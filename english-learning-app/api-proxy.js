@@ -58,6 +58,7 @@ app.post('/api/generate-exercises', async (req, res) => {
     {
       "id": "1",
       "type": "multiple-choice",
+      "context": "Breve texto explicando o conceito/trecho do material antes da pergunta, para o aluno entender o que será cobrado",
       "question": "Pergunta aqui?",
       "options": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
       "answer": "A) Opção 1",
@@ -66,7 +67,7 @@ app.post('/api/generate-exercises', async (req, res) => {
     }
   ]
 }
-O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
           },
         ],
       });
@@ -80,6 +81,7 @@ O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXAT
     {
       "id": "1",
       "type": "multiple-choice",
+      "context": "Breve texto explicando o conceito/trecho do material antes da pergunta, para o aluno entender o que será cobrado",
       "question": "Pergunta aqui?",
       "options": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
       "answer": "A) Opção 1",
@@ -88,7 +90,7 @@ O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXAT
     }
   ]
 }
-O campo "type" deve ser sempre "multiple-choice". O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
       });
     } else {
       console.log('❌ Sem imagem ou texto');

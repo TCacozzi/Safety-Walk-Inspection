@@ -21,6 +21,10 @@ app.post('/api/generate-exercises', async (req, res) => {
 
     if (imageBase64) {
       prompt = 'Analise esta imagem do livro/material de estudo e gere 10 exercícios de múltipla escolha em JSON.\n\n';
+
+      // Detectar tipo de imagem (PNG ou JPEG)
+      const mediaType = imageBase64.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+
       messages.push({
         role: 'user',
         content: [
@@ -28,7 +32,7 @@ app.post('/api/generate-exercises', async (req, res) => {
             type: 'image',
             source: {
               type: 'base64',
-              media_type: 'image/jpeg',
+              media_type: mediaType,
               data: imageBase64,
             },
           },

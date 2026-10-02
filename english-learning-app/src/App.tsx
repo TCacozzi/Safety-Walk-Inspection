@@ -65,7 +65,7 @@ function App() {
     setCurrentScreen('selector');
   };
 
-  const handleLessonComplete = (results: ExerciseResult[]) => {
+  const handleLessonComplete = (day: number, results: ExerciseResult[]) => {
     if (!progress || !selectedSubject) return;
 
     const totalPoints = results.reduce((sum, r) => sum + r.points, 0);

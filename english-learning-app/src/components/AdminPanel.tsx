@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Subject, Question } from '../types';
+import type { Subject } from '../types';
 import '../styles/AdminPanel.css';
 
 interface AdminPanelProps {

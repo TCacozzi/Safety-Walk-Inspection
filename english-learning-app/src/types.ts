@@ -39,6 +39,11 @@ export interface StudentProfile {
   photo: string;
 }
 
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
 export interface UserProgress {
   userId: string;
   currentDay: number;

@@ -4,12 +4,16 @@ import { SubjectSelector } from './components/SubjectSelector';
 import { Lesson } from './components/Lesson';
 import { ParentAccess } from './components/ParentAccess';
 import { StudentProfileSetup } from './components/StudentProfileSetup';
+import { Login } from './components/Login';
 import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile } from './types';
 import './App.css';
 
 type Screen = 'admin' | 'selector' | 'lesson' | 'parent';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => localStorage.getItem('isLoggedIn') === 'true'
+  );
   const [currentScreen, setCurrentScreen] = useState<Screen>('selector');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -46,6 +50,17 @@ function App() {
       localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(newProgress));
     }
   }, []);
+
+  const handleLoginSuccess = () => {
+    localStorage.setItem('isLoggedIn', 'true');
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsAuthenticated(false);
+    setCurrentScreen('selector');
+  };
 
   const handleSaveProfile = (profile: StudentProfile) => {
     setStudentProfile(profile);
@@ -128,6 +143,10 @@ function App() {
     };
   };
 
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -162,6 +181,9 @@ function App() {
               <span className="student-name">
                 {studentProfile?.name || 'Configurar Perfil'}
               </span>
+            </button>
+            <button className="logout-button" onClick={handleLogout} title="Sair">
+              🚪
             </button>
           </div>
         </div>

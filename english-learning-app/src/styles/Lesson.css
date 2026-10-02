@@ -76,6 +76,22 @@
   font-size: 0.9rem;
 }
 
+.progress-summary {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.progress-summary-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
 .start-quiz-button,
 .continue-button {
   width: 100%;

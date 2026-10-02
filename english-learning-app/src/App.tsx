@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { AdminPanel } from './components/AdminPanel';
 import { SubjectSelector } from './components/SubjectSelector';
 import { Lesson } from './components/Lesson';
+import { ParentAccess } from './components/ParentAccess';
 import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType } from './types';
 import './App.css';
 
-type Screen = 'admin' | 'selector' | 'lesson';
+type Screen = 'admin' | 'selector' | 'lesson' | 'parent';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('selector');
@@ -56,6 +57,23 @@ function App() {
     localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(newSubjects));
   };
 
+  const handleResetSubjectProgress = (subjectId: string) => {
+    localStorage.removeItem(`quizProgress_${subjectId}`);
+
+    if (!progress) return;
+    const removedPoints = progress.subjectScores?.[subjectId] || 0;
+    const updatedProgress: UserProgress = {
+      ...progress,
+      totalPoints: progress.totalPoints - removedPoints,
+      subjectScores: {
+        ...progress.subjectScores,
+        [subjectId]: 0,
+      },
+    };
+    setProgress(updatedProgress);
+    localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(updatedProgress));
+  };
+
   const handleSelectSubject = (subject: Subject) => {
     setSelectedSubject(subject);
     setCurrentScreen('lesson');
@@ -91,6 +109,7 @@ function App() {
       title: subject.name,
       description: subject.description || '',
       content: subject.content || '',
+      topics: subject.topics,
       questions: subject.questions,
     };
   };
@@ -125,6 +144,15 @@ function App() {
             subjects={subjects}
             onSelectSubject={handleSelectSubject}
             onAdminClick={() => setCurrentScreen('admin')}
+            onParentClick={() => setCurrentScreen('parent')}
+          />
+        )}
+
+        {currentScreen === 'parent' && (
+          <ParentAccess
+            subjects={subjects}
+            onResetSubjectProgress={handleResetSubjectProgress}
+            onClose={() => setCurrentScreen('selector')}
           />
         )}
 

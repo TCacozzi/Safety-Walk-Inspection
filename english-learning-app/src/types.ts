@@ -14,6 +14,7 @@ export interface Subject {
   name: string;
   description?: string;
   content?: string;
+  topics?: string[];
   questions: Question[];
   createdAt: Date;
   enabled: boolean;
@@ -25,6 +26,7 @@ export interface Lesson {
   title: string;
   description: string;
   content: string;
+  topics?: string[];
   questions: Question[];
 }
 

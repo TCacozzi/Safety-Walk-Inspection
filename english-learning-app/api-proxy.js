@@ -54,6 +54,7 @@ app.post('/api/generate-exercises', async (req, res) => {
             type: 'text',
             text: prompt + `Retorne APENAS um JSON válido com esta estrutura:
 {
+  "topics": ["Tema 1 estudado no material", "Tema 2 estudado no material", "..."],
   "questions": [
     {
       "id": "1",
@@ -67,7 +68,7 @@ app.post('/api/generate-exercises', async (req, res) => {
     }
   ]
 }
-O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+O campo "topics" é uma lista curta (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada um uma frase curta (ex: "Verbo TO BE no presente", "Vocabulário de matérias escolares"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
           },
         ],
       });
@@ -77,6 +78,7 @@ O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto 
         role: 'user',
         content: prompt + `Conteúdo:\n${textReference}\n\nRetorne APENAS um JSON válido com esta estrutura:
 {
+  "topics": ["Tema 1 estudado no material", "Tema 2 estudado no material", "..."],
   "questions": [
     {
       "id": "1",
@@ -90,7 +92,7 @@ O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto 
     }
   ]
 }
-O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+O campo "topics" é uma lista curta (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada um uma frase curta (ex: "Verbo TO BE no presente", "Vocabulário de matérias escolares"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
       });
     } else {
       console.log('❌ Sem imagem ou texto');

@@ -23,6 +23,7 @@ export function AdminPanel({
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [referenceText, setReferenceText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [parentPasscode, setParentPasscode] = useState('');
 
   const extractJSON = (text: string) => {
     const withoutFences = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
@@ -39,6 +40,16 @@ export function AdminPanel({
       localStorage.setItem('claudeApiKey', apiKey);
       alert('API Key salva com sucesso!');
     }
+  };
+
+  const handleSaveParentPasscode = () => {
+    if (!/^\d{6}$/.test(parentPasscode)) {
+      alert('A senha deve ter exatamente 6 números.');
+      return;
+    }
+    localStorage.setItem('parentPasscode', parentPasscode);
+    setParentPasscode('');
+    alert('Senha da Área dos Pais salva com sucesso!');
   };
 
   const handleAddSubject = () => {
@@ -110,6 +121,7 @@ export function AdminPanel({
         const updatedSubject: Subject = {
           ...subject,
           content: imageFile?.name || 'Imagem',
+          topics: parsed.topics || [],
           questions: parsed.questions,
           enabled: true,
         };
@@ -165,6 +177,7 @@ export function AdminPanel({
         const updatedSubject: Subject = {
           ...subject,
           content: referenceText,
+          topics: parsed.topics || [],
           questions: parsed.questions,
           enabled: true,
         };
@@ -208,6 +221,29 @@ export function AdminPanel({
             </div>
             {localStorage.getItem('claudeApiKey') && (
               <p className="success">✅ API Key configurada</p>
+            )}
+          </section>
+
+          <section className="admin-section">
+            <h3>🔒 Senha da Área dos Pais</h3>
+            <p className="section-hint">
+              Use essa senha de 6 números para acessar a Área dos Pais e resetar o progresso de uma matéria.
+            </p>
+            <div className="api-key-input">
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={6}
+                value={parentPasscode}
+                onChange={(e) => setParentPasscode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="Ex: 123456"
+              />
+              <button onClick={handleSaveParentPasscode} className="btn-primary">
+                Salvar Senha
+              </button>
+            </div>
+            {localStorage.getItem('parentPasscode') && (
+              <p className="success">✅ Senha configurada</p>
             )}
           </section>
 

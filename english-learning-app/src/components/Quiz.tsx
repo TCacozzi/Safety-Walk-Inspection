@@ -65,41 +65,38 @@ export const Quiz: React.FC<QuizProps> = ({
   };
 
   const handleAnswer = (value: string) => {
-    if (!isAnswered) {
-      const updatedAnswers = { ...answers, [currentQuestion.id]: value };
-      setAnswers(updatedAnswers);
-      saveProgress({ currentIndex, answers: updatedAnswers, results });
-    }
+    if (isAnswered) return;
+
+    const updatedAnswers = { ...answers, [currentQuestion.id]: value };
+    const isCorrectAnswer = value === currentQuestion.answer.toString();
+    const result: ExerciseResult = {
+      questionId: currentQuestion.id,
+      answered: true,
+      userAnswer: value,
+      correct: isCorrectAnswer,
+      points: isCorrectAnswer ? currentQuestion.points : 0,
+    };
+    const updatedResults = [...results, result];
+
+    setAnswers(updatedAnswers);
+    setResults(updatedResults);
+    setShowFeedback(currentQuestion.explanation);
+    saveProgress({ currentIndex, answers: updatedAnswers, results: updatedResults });
   };
 
   const handleNext = () => {
     if (!isAnswered) return;
 
-    const isCorrectAnswer = userAnswer === currentQuestion.answer.toString();
-    const result: ExerciseResult = {
-      questionId: currentQuestion.id,
-      answered: true,
-      userAnswer,
-      correct: isCorrectAnswer,
-      points: isCorrectAnswer ? currentQuestion.points : 0,
-    };
-
-    const updatedResults = [...results, result];
-    setResults(updatedResults);
-    setShowFeedback(currentQuestion.explanation);
-
-    setTimeout(() => {
-      if (currentIndex < questions.length - 1) {
-        const nextIndex = currentIndex + 1;
-        setCurrentIndex(nextIndex);
-        setShowFeedback(null);
-        setShowQuestion(false);
-        saveProgress({ currentIndex: nextIndex, answers, results: updatedResults });
-      } else {
-        localStorage.removeItem(getStorageKey(subjectId));
-        onComplete(updatedResults);
-      }
-    }, 2000);
+    if (currentIndex < questions.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setShowFeedback(null);
+      setShowQuestion(false);
+      saveProgress({ currentIndex: nextIndex, answers, results });
+    } else {
+      localStorage.removeItem(getStorageKey(subjectId));
+      onComplete(results);
+    }
   };
 
   const progress = ((currentIndex + 1) / questions.length) * 100;
@@ -113,7 +110,7 @@ export const Quiz: React.FC<QuizProps> = ({
           </button>
           <h2>Exercise Time!</h2>
           <button className="exit-button" onClick={handleExit}>
-            Sair e Salvar 💾
+            🏠 Home
           </button>
         </div>
 
@@ -146,7 +143,7 @@ export const Quiz: React.FC<QuizProps> = ({
         </button>
         <h2>Exercise Time!</h2>
         <button className="exit-button" onClick={handleExit}>
-          Sair e Salvar 💾
+          🏠 Home
         </button>
       </div>
 

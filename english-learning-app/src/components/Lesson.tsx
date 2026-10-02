@@ -10,6 +10,25 @@ interface LessonProps {
   onExitToMenu: () => void;
 }
 
+interface SavedQuizProgress {
+  currentIndex: number;
+  results: ExerciseResult[];
+}
+
+const loadSavedProgress = (subjectId: string): SavedQuizProgress | null => {
+  const saved = localStorage.getItem(`quizProgress_${subjectId}`);
+  if (!saved) return null;
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      currentIndex: parsed.currentIndex ?? 0,
+      results: parsed.results ?? [],
+    };
+  } catch {
+    return null;
+  }
+};
+
 export const Lesson: React.FC<LessonProps> = ({
   lesson,
   onBack,
@@ -45,6 +64,11 @@ export const Lesson: React.FC<LessonProps> = ({
   const maxPoints = lesson.questions.reduce((sum, q) => sum + q.points, 0);
   const correctAnswers = quizResults.filter((r) => r.correct).length;
 
+  const savedProgress = quizComplete ? null : loadSavedProgress(lesson.id);
+  const answeredCount = savedProgress?.results.length ?? 0;
+  const correctCount = savedProgress?.results.filter((r) => r.correct).length ?? 0;
+  const accuracyPercent = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
   return (
     <div className="lesson-container">
       <button className="back-button" onClick={onBack}>
@@ -52,15 +76,31 @@ export const Lesson: React.FC<LessonProps> = ({
       </button>
 
       <div className="lesson-header">
-        <h1>
-          Day {lesson.day}: {lesson.title}
-        </h1>
-        <p className="lesson-description">{lesson.description}</p>
+        <h1>📘 Guia de Estudos: {lesson.title}</h1>
+        {lesson.description && <p className="lesson-description">{lesson.description}</p>}
       </div>
 
-      <div className="lesson-content">
-        <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
-      </div>
+      {lesson.topics && lesson.topics.length > 0 && (
+        <div className="lesson-content">
+          <h3>Temas que vamos estudar:</h3>
+          <ul>
+            {lesson.topics.map((topic, index) => (
+              <li key={index}>{topic}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!quizComplete && answeredCount > 0 && (
+        <div className="progress-summary">
+          <span className="progress-summary-label">
+            📊 {answeredCount}/{lesson.questions.length} respondidas
+          </span>
+          <span className="progress-summary-label">
+            ✅ {accuracyPercent}% de acertos
+          </span>
+        </div>
+      )}
 
       {quizComplete ? (
         <div className="results-card">
@@ -110,9 +150,7 @@ export const Lesson: React.FC<LessonProps> = ({
         </div>
       ) : (
         <button className="start-quiz-button" onClick={() => setShowQuiz(true)}>
-          {localStorage.getItem(`quizProgress_${lesson.id}`)
-            ? 'Continuar de Onde Parou ▶️'
-            : 'Start Exercise! 🚀'}
+          {answeredCount > 0 ? 'Continuar de Onde Parou ▶️' : 'Start Exercise! 🚀'}
         </button>
       )}
     </div>

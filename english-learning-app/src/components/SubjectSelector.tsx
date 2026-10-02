@@ -5,12 +5,14 @@ interface SubjectSelectorProps {
   subjects: Subject[];
   onSelectSubject: (subject: Subject) => void;
   onAdminClick: () => void;
+  onParentClick: () => void;
 }
 
 export function SubjectSelector({
   subjects,
   onSelectSubject,
   onAdminClick,
+  onParentClick,
 }: SubjectSelectorProps) {
   const enabledSubjects = subjects.filter((s) => s.enabled);
   const disabledSubjects = subjects.filter((s) => !s.enabled);
@@ -22,9 +24,14 @@ export function SubjectSelector({
           <h2>📚 Escolha a Matéria</h2>
           <p className="subtitle">Bem-vindo, Lorenzo Cacozzi!</p>
         </div>
-        <button className="btn-admin" onClick={onAdminClick} title="Configurações">
-          ⚙️
-        </button>
+        <div className="header-actions">
+          <button className="btn-admin" onClick={onParentClick} title="Área dos Pais">
+            🔒
+          </button>
+          <button className="btn-admin" onClick={onAdminClick} title="Configurações">
+            ⚙️
+          </button>
+        </div>
       </div>
 
       <div className="subjects-grid">

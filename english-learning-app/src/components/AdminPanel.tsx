@@ -24,6 +24,16 @@ export function AdminPanel({
   const [referenceText, setReferenceText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const extractJSON = (text: string) => {
+    const withoutFences = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+    const start = withoutFences.indexOf('{');
+    const end = withoutFences.lastIndexOf('}');
+    if (start === -1 || end === -1) {
+      throw new Error('Resposta da API não contém um JSON válido');
+    }
+    return JSON.parse(withoutFences.slice(start, end + 1));
+  };
+
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
       localStorage.setItem('claudeApiKey', apiKey);
@@ -93,7 +103,7 @@ export function AdminPanel({
       const data = await response.json();
       const content = data.content[0].text;
 
-      const parsed = JSON.parse(content);
+      const parsed = extractJSON(content);
       const subject = subjects.find((s) => s.id === selectedSubjectId);
 
       if (subject) {
@@ -110,7 +120,7 @@ export function AdminPanel({
       }
     } catch (error) {
       console.error('Erro ao gerar exercícios:', error);
-      alert('Erro ao gerar exercícios.\n\nCertifique-se de que:\n1. Servidor API está rodando: node api-proxy.js\n2. API Key está correta');
+      alert(`Erro ao gerar exercícios: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
@@ -148,7 +158,7 @@ export function AdminPanel({
       const data = await response.json();
       const content = data.content[0].text;
 
-      const parsed = JSON.parse(content);
+      const parsed = extractJSON(content);
       const subject = subjects.find((s) => s.id === selectedSubjectId);
 
       if (subject) {
@@ -164,7 +174,7 @@ export function AdminPanel({
       }
     } catch (error) {
       console.error('Erro ao gerar exercícios:', error);
-      alert('Erro ao gerar exercícios.\n\nCertifique-se de que:\n1. Servidor API está rodando: node api-proxy.js\n2. API Key está correta');
+      alert(`Erro ao gerar exercícios: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
     } finally {
       setLoading(false);
     }

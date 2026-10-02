@@ -73,53 +73,14 @@ export function AdminPanel({
 
     setLoading(true);
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('http://localhost:3001/api/generate-exercises', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': savedApiKey,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 4000,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: 'image/jpeg',
-                    data: base64,
-                  },
-                },
-                {
-                  type: 'text',
-                  text: `Analise esta imagem do livro/material de estudo e faça o seguinte:
-1. Extraia o conteúdo principal
-2. Crie 10 exercícios variados (multiple-choice, fill-blank, true-false)
-3. Retorne em JSON com a seguinte estrutura:
-{
-  "content": "conteúdo extraído",
-  "questions": [
-    {
-      "id": "q1",
-      "type": "multiple-choice|fill-blank|true-false",
-      "question": "pergunta",
-      "options": ["op1", "op2", "op3", "op4"],
-      "answer": "resposta correta",
-      "explanation": "explicação",
-      "points": 10
-    }
-  ]
-}
-Retorne APENAS o JSON, sem markdown ou explicações extras.`,
-                },
-              ],
-            },
-          ],
+          imageBase64: base64,
+          apiKey: savedApiKey,
         }),
       });
 
@@ -136,7 +97,7 @@ Retorne APENAS o JSON, sem markdown ou explicações extras.`,
       if (subject) {
         const updatedSubject: Subject = {
           ...subject,
-          content: parsed.content,
+          content: imageFile?.name || 'Imagem',
           questions: parsed.questions,
           enabled: true,
         };
@@ -147,7 +108,7 @@ Retorne APENAS o JSON, sem markdown ou explicações extras.`,
       }
     } catch (error) {
       console.error('Erro ao gerar exercícios:', error);
-      alert('Erro ao gerar exercícios. Verifique a API Key!');
+      alert('Erro ao gerar exercícios.\n\nCertifique-se de que:\n1. Servidor API está rodando: node api-proxy.js\n2. API Key está correta');
     } finally {
       setLoading(false);
     }
@@ -167,39 +128,14 @@ Retorne APENAS o JSON, sem markdown ou explicações extras.`,
 
     setLoading(true);
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('http://localhost:3001/api/generate-exercises', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': savedApiKey,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 4000,
-          messages: [
-            {
-              role: 'user',
-              content: `Baseado neste conteúdo de estudo, crie 10 exercícios variados:
-
-${referenceText}
-
-Retorne em JSON puro (sem markdown) com esta estrutura:
-{
-  "questions": [
-    {
-      "id": "q1",
-      "type": "multiple-choice|fill-blank|true-false",
-      "question": "pergunta",
-      "options": ["op1", "op2", "op3", "op4"],
-      "answer": "resposta",
-      "explanation": "explicação",
-      "points": 10
-    }
-  ]
-}`,
-            },
-          ],
+          textReference: referenceText,
+          apiKey: savedApiKey,
         }),
       });
 
@@ -226,7 +162,7 @@ Retorne em JSON puro (sem markdown) com esta estrutura:
       }
     } catch (error) {
       console.error('Erro ao gerar exercícios:', error);
-      alert('Erro ao gerar exercícios. Verifique a API Key!');
+      alert('Erro ao gerar exercícios.\n\nCertifique-se de que:\n1. Servidor API está rodando: node api-proxy.js\n2. API Key está correta');
     } finally {
       setLoading(false);
     }

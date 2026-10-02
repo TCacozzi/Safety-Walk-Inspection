@@ -99,7 +99,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">🎓 Lorenzo's Study App</h1>
+          <h1 className="app-title">🚀 TESTE ATUALIZADO - Lorenzo's Study App</h1>
           {progress && (
             <div className="header-stats">
               <span className="stat">📚 Matérias: {subjects.filter((s) => s.enabled).length}</span>

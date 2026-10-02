@@ -96,7 +96,7 @@ app.post('/api/generate-exercises', async (req, res) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-1',
+        model: 'claude-3-haiku-20250307',
         max_tokens: 2048,
         messages: messages,
       }),

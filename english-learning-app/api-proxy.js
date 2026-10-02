@@ -1,6 +1,5 @@
-import express from 'express';
-import cors from 'cors';
-import fetch from 'node-fetch';
+const express = require('express');
+const cors = require('cors');
 
 const app = express();
 const PORT = 3001;
@@ -12,7 +11,10 @@ app.post('/api/generate-exercises', async (req, res) => {
   try {
     const { imageBase64, fileExtension, textReference, apiKey } = req.body;
 
+    console.log('📥 Requisição recebida');
+
     if (!apiKey) {
+      console.log('❌ API Key ausente');
       return res.status(400).json({ error: 'API Key é obrigatória' });
     }
 
@@ -22,7 +24,6 @@ app.post('/api/generate-exercises', async (req, res) => {
     if (imageBase64) {
       prompt = 'Analise esta imagem do livro/material de estudo e gere 10 exercícios de múltipla escolha em JSON.\n\n';
 
-      // Detectar tipo de imagem pela extensão do arquivo
       const ext = (fileExtension || 'jpeg').toLowerCase();
       const mediaTypeMap = {
         'png': 'image/png',
@@ -33,7 +34,7 @@ app.post('/api/generate-exercises', async (req, res) => {
       };
       const mediaType = mediaTypeMap[ext] || 'image/jpeg';
 
-      console.log(`Processando imagem: tipo=${mediaType}, extensão=${ext}`);
+      console.log(`📷 Processando imagem: tipo=${mediaType}, extensão=${ext}`);
 
       messages.push({
         role: 'user',
@@ -64,6 +65,7 @@ app.post('/api/generate-exercises', async (req, res) => {
         ],
       });
     } else if (textReference) {
+      console.log('📝 Processando texto');
       messages.push({
         role: 'user',
         content: prompt + `Conteúdo:\n${textReference}\n\nRetorne APENAS um JSON válido com esta estrutura:
@@ -80,10 +82,11 @@ app.post('/api/generate-exercises', async (req, res) => {
 }`,
       });
     } else {
+      console.log('❌ Sem imagem ou texto');
       return res.status(400).json({ error: 'Imagem ou texto é obrigatório' });
     }
 
-    console.log('Enviando para API Claude...');
+    console.log('🚀 Enviando para API Claude...');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -101,15 +104,15 @@ app.post('/api/generate-exercises', async (req, res) => {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('API Error Response:', error);
+      console.error('❌ API Error Response:', error);
       return res.status(response.status).json({ error: 'Erro na API Claude', details: error });
     }
 
     const data = await response.json();
-    console.log('Sucesso! Resposta da API recebida.');
+    console.log('✅ Sucesso! Resposta da API recebida.');
     res.json(data);
   } catch (error) {
-    console.error('Server Error:', error);
+    console.error('❌ Server Error:', error.message);
     res.status(500).json({ error: 'Erro no servidor', details: error.message });
   }
 });

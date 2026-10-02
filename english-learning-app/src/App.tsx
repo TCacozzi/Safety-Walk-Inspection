@@ -1,87 +1,137 @@
 import { useState, useEffect } from 'react';
-import { Home } from './components/Home';
+import { AdminPanel } from './components/AdminPanel';
+import { SubjectSelector } from './components/SubjectSelector';
 import { Lesson } from './components/Lesson';
-import type { UserProgress, ExerciseResult } from './types';
-import { lessons } from './data/lessons';
+import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType } from './types';
 import './App.css';
 
-type Screen = 'home' | 'lesson';
+type Screen = 'admin' | 'selector' | 'lesson';
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const [selectedDay, setSelectedDay] = useState<number>(1);
+  const [currentScreen, setCurrentScreen] = useState<Screen>('selector');
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
 
-  // Load progress from localStorage
+  // Load subjects and progress from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('englishBoostProgress');
-    if (saved) {
-      setProgress(JSON.parse(saved));
+    const savedSubjects = localStorage.getItem('lorenzoDynamicSubjects');
+    if (savedSubjects) {
+      setSubjects(JSON.parse(savedSubjects));
+    }
+
+    const savedProgress = localStorage.getItem('lorenzoDynamicProgress');
+    if (savedProgress) {
+      setProgress(JSON.parse(savedProgress));
     } else {
       const newProgress: UserProgress = {
-        userId: `user_${Date.now()}`,
+        userId: `lorenzo_${Date.now()}`,
         currentDay: 1,
         completedDays: [],
         scores: {},
         totalPoints: 0,
         lastAccessed: new Date(),
+        subjectScores: {},
       };
       setProgress(newProgress);
-      localStorage.setItem('englishBoostProgress', JSON.stringify(newProgress));
+      localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(newProgress));
     }
   }, []);
 
-  const handleStartLesson = (day: number) => {
-    setSelectedDay(day);
+  const handleAddSubject = (subject: Subject) => {
+    const updated = [...subjects, subject];
+    setSubjects(updated);
+    localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(updated));
+  };
+
+  const handleDeleteSubject = (id: string) => {
+    const updated = subjects.filter((s) => s.id !== id);
+    setSubjects(updated);
+    localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(updated));
+  };
+
+  const handleUpdateSubject = (updated: Subject) => {
+    const newSubjects = subjects.map((s) => (s.id === updated.id ? updated : s));
+    setSubjects(newSubjects);
+    localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(newSubjects));
+  };
+
+  const handleSelectSubject = (subject: Subject) => {
+    setSelectedSubject(subject);
     setCurrentScreen('lesson');
   };
 
-  const handleBackToHome = () => {
-    setCurrentScreen('home');
+  const handleBackToSelector = () => {
+    setCurrentScreen('selector');
   };
 
-  const handleLessonComplete = (day: number, results: ExerciseResult[]) => {
-    if (!progress) return;
+  const handleLessonComplete = (results: ExerciseResult[]) => {
+    if (!progress || !selectedSubject) return;
 
     const totalPoints = results.reduce((sum, r) => sum + r.points, 0);
     const updatedProgress: UserProgress = {
       ...progress,
-      completedDays: [...new Set([...progress.completedDays, day])],
-      scores: { ...progress.scores, [`day_${day}`]: totalPoints },
       totalPoints: progress.totalPoints + totalPoints,
+      subjectScores: {
+        ...progress.subjectScores,
+        [selectedSubject.id]: (progress.subjectScores?.[selectedSubject.id] || 0) + totalPoints,
+      },
       lastAccessed: new Date(),
     };
 
     setProgress(updatedProgress);
-    localStorage.setItem('englishBoostProgress', JSON.stringify(updatedProgress));
-    setCurrentScreen('home');
+    localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(updatedProgress));
+    setCurrentScreen('selector');
   };
 
-  const currentLesson = lessons.find((l) => l.day === selectedDay);
+  const convertSubjectToLesson = (subject: Subject): LessonType => {
+    return {
+      id: subject.id,
+      day: 1,
+      title: subject.name,
+      description: subject.description || '',
+      content: subject.content || '',
+      questions: subject.questions,
+    };
+  };
 
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">📚 English Boost!</h1>
+          <h1 className="app-title">🎓 Lorenzo's Study App</h1>
           {progress && (
             <div className="header-stats">
-              <span className="stat">Days: {progress.completedDays.length}/7</span>
-              <span className="stat">Points: {progress.totalPoints}</span>
+              <span className="stat">📚 Matérias: {subjects.filter((s) => s.enabled).length}</span>
+              <span className="stat">⭐ Pontos: {progress.totalPoints}</span>
             </div>
           )}
         </div>
       </header>
 
       <main className="app-main">
-        {currentScreen === 'home' && (
-          <Home progress={progress} onStartLesson={handleStartLesson} />
+        {currentScreen === 'admin' && (
+          <AdminPanel
+            subjects={subjects}
+            onAddSubject={handleAddSubject}
+            onDeleteSubject={handleDeleteSubject}
+            onUpdateSubject={handleUpdateSubject}
+            onClose={() => setCurrentScreen('selector')}
+          />
         )}
 
-        {currentScreen === 'lesson' && currentLesson && (
+        {currentScreen === 'selector' && (
+          <SubjectSelector
+            subjects={subjects}
+            onSelectSubject={handleSelectSubject}
+            onAdminClick={() => setCurrentScreen('admin')}
+          />
+        )}
+
+        {currentScreen === 'lesson' && selectedSubject && (
           <Lesson
-            lesson={currentLesson}
-            onBack={handleBackToHome}
+            lesson={convertSubjectToLesson(selectedSubject)}
+            onBack={handleBackToSelector}
             onComplete={handleLessonComplete}
           />
         )}
@@ -89,7 +139,7 @@ function App() {
 
       <footer className="app-footer">
         <p>
-          Made with ❤️ for English learners | © 2024 English Boost
+          Personalized Study App for Lorenzo Cacozzi | Made with ❤️ by Claude
         </p>
       </footer>
     </div>

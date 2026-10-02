@@ -1,0 +1,236 @@
+.subject-selector {
+  width: 100%;
+  padding: 2rem 1rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.header-title h2 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.btn-admin {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border: none;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px -2px rgba(30, 64, 175, 0.3);
+}
+
+.btn-admin:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 8px 20px -4px rgba(30, 64, 175, 0.4);
+}
+
+.btn-admin:active {
+  transform: scale(0.95) rotate(15deg);
+}
+
+.subjects-grid {
+  max-width: 1000px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+  border-radius: 1rem;
+  border: 2px dashed #3b82f6;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin: 0.5rem 0;
+}
+
+.subjects-section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  margin: 0 0 1rem 0;
+  color: var(--text);
+}
+
+.section-info {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.subject-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  border-radius: 1rem;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  transition: all 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 220px;
+  position: relative;
+  overflow: hidden;
+}
+
+.subject-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.subject-card.enabled {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.2);
+}
+
+.subject-card.enabled:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px -6px rgba(30, 64, 175, 0.3);
+  border-color: #1e40af;
+}
+
+.subject-card.enabled:hover::before {
+  opacity: 1;
+}
+
+.subject-card.disabled {
+  border-color: var(--border);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.subject-card.disabled:hover {
+  transform: none;
+}
+
+.card-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  transition: transform 0.3s;
+}
+
+.subject-card.enabled:hover .card-icon {
+  transform: scale(1.15) rotate(10deg);
+}
+
+.subject-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: var(--text);
+  text-align: center;
+}
+
+.card-info {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subject-card.enabled .badge {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.subject-card.disabled .badge {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+@media (max-width: 768px) {
+  .subject-selector {
+    padding: 1rem 0.5rem;
+  }
+
+  .selector-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 2rem;
+  }
+
+  .header-title h2 {
+    font-size: 1.5rem;
+  }
+
+  .btn-admin {
+    align-self: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .subject-card {
+    min-height: 180px;
+  }
+
+  .card-icon {
+    font-size: 2.5rem;
+  }
+}

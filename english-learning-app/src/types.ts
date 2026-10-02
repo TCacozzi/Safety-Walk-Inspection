@@ -8,6 +8,16 @@ export interface Question {
   points: number;
 }
 
+export interface Subject {
+  id: string;
+  name: string;
+  description?: string;
+  content?: string;
+  questions: Question[];
+  createdAt: Date;
+  enabled: boolean;
+}
+
 export interface Lesson {
   id: string;
   day: number;
@@ -24,6 +34,7 @@ export interface UserProgress {
   scores: Record<string, number>;
   totalPoints: number;
   lastAccessed: Date;
+  subjectScores?: Record<string, number>;
 }
 
 export interface ExerciseResult {

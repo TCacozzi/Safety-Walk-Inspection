@@ -26,7 +26,6 @@ export const Quiz: React.FC<QuizProps> = ({
   const [answers, setAnswers] = useState<Record<string, string>>(initialProgress.answers);
   const [results, setResults] = useState<ExerciseResult[]>(initialProgress.results);
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
-  const [showQuestion, setShowQuestion] = useState(false);
 
   const currentQuestion = questions[currentIndex];
   const isAnswered = answers[currentQuestion.id] !== undefined;
@@ -69,7 +68,6 @@ export const Quiz: React.FC<QuizProps> = ({
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
       setShowFeedback(null);
-      setShowQuestion(false);
       saveProgress({ currentIndex: nextIndex, answers, results });
     } else {
       clearQuizProgress(userId, subjectId);
@@ -78,40 +76,6 @@ export const Quiz: React.FC<QuizProps> = ({
   };
 
   const progress = ((currentIndex + 1) / questions.length) * 100;
-
-  if (!showQuestion && currentQuestion.context) {
-    return (
-      <div className="quiz-container">
-        <div className="quiz-header">
-          <button className="back-button" onClick={onBack}>
-            ← Back
-          </button>
-          <h2>Exercise Time!</h2>
-          <button className="exit-button" onClick={handleExit}>
-            🏠 Home
-          </button>
-        </div>
-
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
-        </div>
-
-        <div className="question-info">
-          <span className="question-number">
-            Question {currentIndex + 1} / {questions.length}
-          </span>
-        </div>
-
-        <div className="context-card">
-          <h3>📘 Antes de responder...</h3>
-          <p className="context-text">{currentQuestion.context}</p>
-          <button className="next-button" onClick={() => setShowQuestion(true)}>
-            Ver Pergunta →
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="quiz-container">

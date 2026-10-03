@@ -51,8 +51,9 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
   };
 
   const handleRemoveUser = (user: UserAccount) => {
-    if (confirm(`Remover o acesso de "${user.username}"?`)) {
+    if (confirm(`Remover o acesso de "${user.username}"? O perfil dele também será apagado.`)) {
       const updated = removeUser(user.id);
+      localStorage.removeItem(`studentProfile_${user.id}`);
       setUsers(updated);
     }
   };

@@ -14,6 +14,9 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => localStorage.getItem('isLoggedIn') === 'true'
   );
+  const [currentUserId, setCurrentUserId] = useState<string | null>(
+    () => localStorage.getItem('currentUserId')
+  );
   const [currentScreen, setCurrentScreen] = useState<Screen>('selector');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -26,11 +29,6 @@ function App() {
     const savedSubjects = localStorage.getItem('lorenzoDynamicSubjects');
     if (savedSubjects) {
       setSubjects(JSON.parse(savedSubjects));
-    }
-
-    const savedProfile = localStorage.getItem('studentProfile');
-    if (savedProfile) {
-      setStudentProfile(JSON.parse(savedProfile));
     }
 
     const savedProgress = localStorage.getItem('lorenzoDynamicProgress');
@@ -51,20 +49,36 @@ function App() {
     }
   }, []);
 
-  const handleLoginSuccess = () => {
+  // Load the logged-in user's own profile whenever the user changes
+  useEffect(() => {
+    if (!currentUserId) {
+      setStudentProfile(null);
+      return;
+    }
+
+    const savedProfile = localStorage.getItem(`studentProfile_${currentUserId}`);
+    setStudentProfile(savedProfile ? JSON.parse(savedProfile) : null);
+  }, [currentUserId]);
+
+  const handleLoginSuccess = (userId: string) => {
     localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUserId', userId);
+    setCurrentUserId(userId);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUserId');
     setIsAuthenticated(false);
+    setCurrentUserId(null);
     setCurrentScreen('selector');
   };
 
   const handleSaveProfile = (profile: StudentProfile) => {
+    if (!currentUserId) return;
     setStudentProfile(profile);
-    localStorage.setItem('studentProfile', JSON.stringify(profile));
+    localStorage.setItem(`studentProfile_${currentUserId}`, JSON.stringify(profile));
   };
 
   const handleAddSubject = (subject: Subject) => {
@@ -147,6 +161,17 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
+  if (!studentProfile) {
+    return (
+      <StudentProfileSetup
+        profile={null}
+        onSave={handleSaveProfile}
+        onClose={() => {}}
+        mandatory
+      />
+    );
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -173,10 +198,10 @@ function App() {
               </div>
             )}
             <button className="student-avatar" onClick={() => setShowProfileSetup(true)}>
-              {studentProfile?.photo ? (
+              {studentProfile?.photo?.startsWith('data:') ? (
                 <img src={studentProfile.photo} alt={studentProfile.name} />
               ) : (
-                <span className="avatar-placeholder">👤</span>
+                <span className="avatar-placeholder">{studentProfile?.photo || '👤'}</span>
               )}
               <span className="student-name">
                 {studentProfile?.name || 'Configurar Perfil'}

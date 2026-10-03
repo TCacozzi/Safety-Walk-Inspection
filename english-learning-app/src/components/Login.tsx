@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { validateLogin, getUsers } from '../utils/userAccounts';
+import { findUser, getUsers } from '../utils/userAccounts';
 import { AdminUsersPanel } from './AdminUsersPanel';
 import '../styles/Login.css';
 
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (userId: string) => void;
 }
 
 export function Login({ onLoginSuccess }: LoginProps) {
@@ -23,9 +23,10 @@ export function Login({ onLoginSuccess }: LoginProps) {
       return;
     }
 
-    if (validateLogin(username.trim(), password)) {
+    const user = findUser(username.trim(), password);
+    if (user) {
       setError('');
-      onLoginSuccess();
+      onLoginSuccess(user.id);
     } else {
       setError('Usuário ou senha incorretos.');
     }

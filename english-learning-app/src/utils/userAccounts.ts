@@ -49,6 +49,6 @@ export function removeUser(id: string): UserAccount[] {
   return updated;
 }
 
-export function validateLogin(username: string, password: string): boolean {
-  return getUsers().some((u) => u.username === username && u.password === password);
+export function findUser(username: string, password: string): UserAccount | null {
+  return getUsers().find((u) => u.username === username && u.password === password) ?? null;
 }

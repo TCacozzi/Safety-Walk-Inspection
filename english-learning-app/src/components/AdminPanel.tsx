@@ -26,6 +26,21 @@ export function AdminPanel({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [parentPasscode, setParentPasscode] = useState('');
 
+  const [unlocked, setUnlocked] = useState(() => !localStorage.getItem('parentPasscode'));
+  const [passcodeInput, setPasscodeInput] = useState('');
+  const [passcodeError, setPasscodeError] = useState('');
+
+  const handleUnlock = () => {
+    const savedPasscode = localStorage.getItem('parentPasscode');
+    if (passcodeInput === savedPasscode) {
+      setUnlocked(true);
+      setPasscodeError('');
+    } else {
+      setPasscodeError('Senha incorreta. Tente novamente.');
+    }
+    setPasscodeInput('');
+  };
+
   const extractJSON = (text: string) => {
     const withoutFences = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
     const start = withoutFences.indexOf('{');
@@ -43,7 +58,7 @@ export function AdminPanel({
     }
     localStorage.setItem('parentPasscode', parentPasscode);
     setParentPasscode('');
-    alert('Senha da Área dos Pais salva com sucesso!');
+    alert('Senha de Administrador salva com sucesso!');
   };
 
   const handleAddSubject = () => {
@@ -177,11 +192,47 @@ export function AdminPanel({
 
   const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
 
+  if (!unlocked) {
+    return (
+      <div className="admin-panel-overlay">
+        <div className="admin-panel">
+          <div className="admin-header">
+            <h2>⚙️ Painel do Admin</h2>
+            <button className="close-btn" onClick={onClose}>
+              ✕
+            </button>
+          </div>
+
+          <div className="admin-content">
+            <div className="passcode-gate">
+              <p>Digite a senha de 6 números do administrador para continuar:</p>
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={6}
+                value={passcodeInput}
+                onChange={(e) => setPasscodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onKeyPress={(e) => e.key === 'Enter' && handleUnlock()}
+                placeholder="••••••"
+                className="passcode-input"
+                autoFocus
+              />
+              <button className="btn-primary" onClick={handleUnlock}>
+                Entrar
+              </button>
+              {passcodeError && <p className="error-text">{passcodeError}</p>}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-panel-overlay">
       <div className="admin-panel">
         <div className="admin-header">
-          <h2>⚙️ Painel do Admin - Lorenzo Cacozzi</h2>
+          <h2>⚙️ Painel do Admin</h2>
           <button className="close-btn" onClick={onClose}>
             ✕
           </button>
@@ -189,9 +240,9 @@ export function AdminPanel({
 
         <div className="admin-content">
           <section className="admin-section">
-            <h3>🔒 Senha da Área dos Pais</h3>
+            <h3>🔒 Senha de Administrador</h3>
             <p className="section-hint">
-              Use essa senha de 6 números para acessar a Área dos Pais e resetar o progresso de uma matéria.
+              Essa senha de 6 números protege este Painel do Admin, a Área dos Pais e o Acesso Administrador (tela de login) — só quem souber a senha consegue cadastrar matérias e aprovar novos usuários.
             </p>
             <div className="api-key-input">
               <input

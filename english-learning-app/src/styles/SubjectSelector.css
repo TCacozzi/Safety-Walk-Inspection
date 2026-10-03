@@ -188,6 +188,20 @@
   text-align: center;
 }
 
+.card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;

@@ -7,8 +7,13 @@ export function getUsers(): UserAccount[] {
   if (saved) {
     try {
       const users: UserAccount[] = JSON.parse(saved);
-      // Accounts created before the approval field existed are already in use; grandfather them in as approved.
-      return users.map((u) => ({ ...u, approved: u.approved ?? true }));
+      // Accounts created before these fields existed are already in use; grandfather them in with safe defaults.
+      return users.map((u) => ({
+        ...u,
+        approved: u.approved ?? true,
+        email: u.email ?? '',
+        parentPassword: u.parentPassword ?? '',
+      }));
     } catch {
       return [];
     }
@@ -20,7 +25,14 @@ export function getUsers(): UserAccount[] {
     try {
       const parsed = JSON.parse(legacy);
       const migrated: UserAccount[] = [
-        { id: `user_${Date.now()}`, username: parsed.username, password: parsed.password, approved: true },
+        {
+          id: `user_${Date.now()}`,
+          username: parsed.username,
+          password: parsed.password,
+          email: '',
+          parentPassword: '',
+          approved: true,
+        },
       ];
       saveUsers(migrated);
       localStorage.removeItem('loginCredentials');
@@ -37,9 +49,22 @@ export function saveUsers(users: UserAccount[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
 }
 
-export function addUser(username: string, password: string, approved: boolean): UserAccount[] {
+export function addUser(
+  username: string,
+  password: string,
+  approved: boolean,
+  email: string = '',
+  parentPassword: string = ''
+): UserAccount[] {
   const users = getUsers();
-  const newUser: UserAccount = { id: `user_${Date.now()}`, username, password, approved };
+  const newUser: UserAccount = {
+    id: `user_${Date.now()}`,
+    username,
+    password,
+    email,
+    parentPassword,
+    approved,
+  };
   const updated = [...users, newUser];
   saveUsers(updated);
   return updated;
@@ -59,4 +84,9 @@ export function approveUser(id: string): UserAccount[] {
 
 export function findUser(username: string, password: string): UserAccount | null {
   return getUsers().find((u) => u.username === username && u.password === password) ?? null;
+}
+
+export function validateParentPassword(userId: string, password: string): boolean {
+  const user = getUsers().find((u) => u.id === userId);
+  return !!user?.parentPassword && user.parentPassword === password;
 }

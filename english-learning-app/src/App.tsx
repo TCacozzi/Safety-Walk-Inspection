@@ -4,6 +4,7 @@ import { SubjectSelector } from './components/SubjectSelector';
 import { Lesson } from './components/Lesson';
 import { ParentAccess } from './components/ParentAccess';
 import { StudentProfileSetup } from './components/StudentProfileSetup';
+import { ResetMyProgress } from './components/ResetMyProgress';
 import { Login } from './components/Login';
 import { getUsers } from './utils/userAccounts';
 import { getUserProgress, saveUserProgress, clearQuizProgress } from './utils/userProgress';
@@ -25,6 +26,7 @@ function App() {
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showResetMyProgress, setShowResetMyProgress] = useState(false);
 
   // Load subjects from localStorage
   useEffect(() => {
@@ -210,6 +212,13 @@ function App() {
                 {studentProfile?.name || 'Configurar Perfil'}
               </span>
             </button>
+            <button
+              className="logout-button"
+              onClick={() => setShowResetMyProgress(true)}
+              title="Resetar Meu Progresso"
+            >
+              🔄
+            </button>
             <button className="logout-button" onClick={handleLogout} title="Sair">
               🚪
             </button>
@@ -222,6 +231,15 @@ function App() {
           profile={studentProfile}
           onSave={handleSaveProfile}
           onClose={() => setShowProfileSetup(false)}
+        />
+      )}
+
+      {showResetMyProgress && currentUserId && (
+        <ResetMyProgress
+          userId={currentUserId}
+          subjects={subjects}
+          onResetSubjectProgress={handleResetSubjectProgress}
+          onClose={() => setShowResetMyProgress(false)}
         />
       )}
 

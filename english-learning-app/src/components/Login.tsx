@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { findUser, getUsers, addUser } from '../utils/userAccounts';
+import { sendAccountEmail } from '../utils/email';
 import { AdminUsersPanel } from './AdminUsersPanel';
 import '../styles/Login.css';
 
@@ -12,6 +13,8 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [parentPassword, setParentPassword] = useState('');
   const [error, setError] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
@@ -25,13 +28,17 @@ export function Login({ onLoginSuccess }: LoginProps) {
     }
   };
 
-  const handleCreateAccount = () => {
-    if (!username.trim() || !password) {
-      setError('Preencha usuário e senha.');
+  const handleCreateAccount = async () => {
+    if (!username.trim() || !password || !email.trim()) {
+      setError('Preencha usuário, senha e e-mail.');
       return;
     }
     if (password !== confirmPassword) {
       setError('As senhas não conferem.');
+      return;
+    }
+    if (!/^\d{6}$/.test(parentPassword)) {
+      setError('A senha dos pais deve ter exatamente 6 números.');
       return;
     }
     if (getUsers().some((u) => u.username === username.trim())) {
@@ -39,9 +46,12 @@ export function Login({ onLoginSuccess }: LoginProps) {
       return;
     }
 
-    const updated = addUser(username.trim(), password, false);
+    const updated = addUser(username.trim(), password, false, email.trim(), parentPassword);
     const newUser = updated[updated.length - 1];
     setError('');
+
+    sendAccountEmail(newUser.email, 'pending', newUser.username);
+
     onLoginSuccess(newUser.id);
   };
 
@@ -81,12 +91,31 @@ export function Login({ onLoginSuccess }: LoginProps) {
               placeholder="Senha"
             />
             {mode === 'create' && (
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirmar Senha"
-              />
+              <>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirmar Senha"
+                />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="E-mail do responsável"
+                />
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={parentPassword}
+                  onChange={(e) => setParentPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Senha dos Pais (6 números)"
+                />
+                <p className="login-field-hint">
+                  A senha dos pais serve para resetar o progresso deste aluno depois, sem precisar da senha do administrador.
+                </p>
+              </>
             )}
 
             {error && <p className="login-error">{error}</p>}

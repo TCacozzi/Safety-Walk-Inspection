@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { UserAccount } from '../types';
 import { getUsers, addUser, removeUser, approveUser } from '../utils/userAccounts';
+import { sendAccountEmail } from '../utils/email';
 import '../styles/AdminUsersPanel.css';
 
 interface AdminUsersPanelProps {
@@ -15,6 +16,8 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
 
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newParentPassword, setNewParentPassword] = useState('');
 
   const handleUnlock = () => {
     const savedPasscode = localStorage.getItem('parentPasscode');
@@ -39,15 +42,27 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
       alert('Preencha usuário e senha.');
       return;
     }
+    if (newParentPassword && !/^\d{6}$/.test(newParentPassword)) {
+      alert('A senha dos pais deve ter exatamente 6 números.');
+      return;
+    }
     if (users.some((u) => u.username === newUsername.trim())) {
       alert('Já existe um usuário com esse nome.');
       return;
     }
 
-    const updated = addUser(newUsername.trim(), newPassword, true);
+    const updated = addUser(
+      newUsername.trim(),
+      newPassword,
+      true,
+      newEmail.trim(),
+      newParentPassword
+    );
     setUsers(updated);
     setNewUsername('');
     setNewPassword('');
+    setNewEmail('');
+    setNewParentPassword('');
   };
 
   const handleRemoveUser = (user: UserAccount) => {
@@ -61,6 +76,7 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
   const handleApproveUser = (user: UserAccount) => {
     const updated = approveUser(user.id);
     setUsers(updated);
+    sendAccountEmail(user.email, 'approved', user.username);
   };
 
   return (
@@ -105,6 +121,7 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
                       <div key={user.id} className="user-item">
                         <div className="user-info">
                           <span className="user-name">{user.username}</span>
+                          {user.email && <span className="user-email">{user.email}</span>}
                           <span className={`user-status ${user.approved ? 'approved' : 'pending'}`}>
                             {user.approved ? '✅ Aprovado' : '⏳ Pendente'}
                           </span>
@@ -139,6 +156,20 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Senha"
+                  />
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="E-mail (opcional)"
+                  />
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={newParentPassword}
+                    onChange={(e) => setNewParentPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Senha dos Pais (6 números)"
                   />
                   <button className="btn-primary" onClick={handleAddUser}>
                     Adicionar

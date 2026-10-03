@@ -1,15 +1,24 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import { Resend } from 'resend';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Manda Bem! <onboarding@resend.dev>';
 
 if (!ANTHROPIC_API_KEY) {
   console.error('❌ ANTHROPIC_API_KEY não configurada. Crie um arquivo .env com ANTHROPIC_API_KEY=sk-ant-...');
   process.exit(1);
 }
+
+if (!RESEND_API_KEY) {
+  console.warn('⚠️  RESEND_API_KEY não configurada. O envio de e-mails ficará desativado até você configurá-la.');
+}
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -130,6 +139,65 @@ O campo "summary" é um resumo geral e curto do material, em português. O campo
     res.json(data);
   } catch (error) {
     console.error('❌ Server Error:', error.message);
+    res.status(500).json({ error: 'Erro no servidor', details: error.message });
+  }
+});
+
+const EMAIL_TEMPLATES = {
+  pending: (username) => ({
+    subject: 'Cadastro recebido - Manda Bem!',
+    html: `
+      <h2>Olá, ${username}!</h2>
+      <p>Seu cadastro no <strong>Manda Bem!</strong> foi recebido com sucesso.</p>
+      <p>Sua conta está <strong>aguardando liberação</strong> do administrador. Assim que for aprovada, você receberá um novo e-mail e já poderá acessar as matérias.</p>
+      <p>Até breve! 📚</p>
+    `,
+  }),
+  approved: (username) => ({
+    subject: 'Sua conta foi liberada! - Manda Bem!',
+    html: `
+      <h2>Boas notícias, ${username}!</h2>
+      <p>Sua conta no <strong>Manda Bem!</strong> foi aprovada pelo administrador.</p>
+      <p>Você já pode entrar na plataforma e começar a estudar. 🎉</p>
+    `,
+  }),
+};
+
+app.post('/api/send-email', async (req, res) => {
+  try {
+    const { to, type, username } = req.body;
+
+    if (!to || !type || !username) {
+      return res.status(400).json({ error: 'to, type e username são obrigatórios' });
+    }
+
+    const template = EMAIL_TEMPLATES[type];
+    if (!template) {
+      return res.status(400).json({ error: `Tipo de e-mail inválido: ${type}` });
+    }
+
+    if (!resend) {
+      console.warn(`⚠️  Envio de e-mail (${type}) ignorado: RESEND_API_KEY não configurada.`);
+      return res.json({ sent: false, reason: 'RESEND_API_KEY não configurada no servidor' });
+    }
+
+    const { subject, html } = template(username);
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      html,
+    });
+
+    if (error) {
+      console.error('❌ Erro ao enviar e-mail:', error);
+      return res.status(502).json({ sent: false, error: error.message });
+    }
+
+    console.log(`✅ E-mail "${type}" enviado para ${to}`);
+    res.json({ sent: true });
+  } catch (error) {
+    console.error('❌ Server Error (send-email):', error.message);
     res.status(500).json({ error: 'Erro no servidor', details: error.message });
   }
 });

@@ -43,6 +43,8 @@ export interface UserAccount {
   id: string;
   username: string;
   password: string;
+  email: string;
+  parentPassword: string;
   approved: boolean;
 }
 

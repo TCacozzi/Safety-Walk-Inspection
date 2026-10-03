@@ -1,22 +1,24 @@
 import express from 'express';
 import cors from 'cors';
+import 'dotenv/config';
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+if (!ANTHROPIC_API_KEY) {
+  console.error('❌ ANTHROPIC_API_KEY não configurada. Crie um arquivo .env com ANTHROPIC_API_KEY=sk-ant-...');
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 app.post('/api/generate-exercises', async (req, res) => {
   try {
-    const { imageBase64, fileExtension, textReference, apiKey } = req.body;
+    const { imageBase64, fileExtension, textReference } = req.body;
 
     console.log('📥 Requisição recebida');
-
-    if (!apiKey) {
-      console.log('❌ API Key ausente');
-      return res.status(400).json({ error: 'API Key é obrigatória' });
-    }
 
     const instructions = 'Você é um professor de inglês preparando uma prova de revisão para um aluno. Leia e entenda cuidadosamente TODO o conteúdo fornecido (é uma prova/material de inglês) antes de criar as perguntas.\n\n' +
       'Gere NO MÍNIMO 30 exercícios de múltipla escolha, todos diretamente correlacionados ao conteúdo fornecido (vocabulário, gramática, textos, diálogos, exercícios que aparecem no material). Não invente temas que não estejam no material. Varie o foco das perguntas (vocabulário, gramática, compreensão de texto, tradução) sempre com base no que está no conteúdo.\n\n';
@@ -107,7 +109,7 @@ O campo "summary" é um resumo geral e curto do material, em português. O campo
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+        'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({

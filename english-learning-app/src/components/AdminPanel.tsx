@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Subject } from '../types';
 import '../styles/AdminPanel.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 interface AdminPanelProps {
   subjects: Subject[];
   onAddSubject: (subject: Subject) => void;
@@ -18,7 +20,6 @@ export function AdminPanel({
   onClose,
 }: AdminPanelProps) {
   const [newSubjectName, setNewSubjectName] = useState('');
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('claudeApiKey') || '');
   const [loading, setLoading] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [referenceText, setReferenceText] = useState('');
@@ -33,13 +34,6 @@ export function AdminPanel({
       throw new Error('Resposta da API não contém um JSON válido');
     }
     return JSON.parse(withoutFences.slice(start, end + 1));
-  };
-
-  const handleSaveApiKey = () => {
-    if (apiKey.trim()) {
-      localStorage.setItem('claudeApiKey', apiKey);
-      alert('API Key salva com sucesso!');
-    }
   };
 
   const handleSaveParentPasscode = () => {
@@ -85,17 +79,11 @@ export function AdminPanel({
   };
 
   const generateExercisesFromImage = async (base64: string, fileExt: string = 'jpeg') => {
-    const savedApiKey = localStorage.getItem('claudeApiKey');
-    if (!savedApiKey) {
-      alert('Configure a API Key primeiro!');
-      return;
-    }
-
     if (!selectedSubjectId) return;
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/generate-exercises', {
+      const response = await fetch(`${API_URL}/api/generate-exercises`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +91,6 @@ export function AdminPanel({
         body: JSON.stringify({
           imageBase64: base64,
           fileExtension: fileExt,
-          apiKey: savedApiKey,
         }),
       });
 
@@ -140,12 +127,6 @@ export function AdminPanel({
   };
 
   const generateExercisesFromText = async () => {
-    const savedApiKey = localStorage.getItem('claudeApiKey');
-    if (!savedApiKey) {
-      alert('Configure a API Key primeiro!');
-      return;
-    }
-
     if (!selectedSubjectId || !referenceText.trim()) {
       alert('Selecione uma matéria e cole a referência!');
       return;
@@ -153,14 +134,13 @@ export function AdminPanel({
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/generate-exercises', {
+      const response = await fetch(`${API_URL}/api/generate-exercises`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           textReference: referenceText,
-          apiKey: savedApiKey,
         }),
       });
 
@@ -208,24 +188,6 @@ export function AdminPanel({
         </div>
 
         <div className="admin-content">
-          <section className="admin-section">
-            <h3>🔑 API Key Claude</h3>
-            <div className="api-key-input">
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Cole sua API Key aqui..."
-              />
-              <button onClick={handleSaveApiKey} className="btn-primary">
-                Salvar API Key
-              </button>
-            </div>
-            {localStorage.getItem('claudeApiKey') && (
-              <p className="success">✅ API Key configurada</p>
-            )}
-          </section>
-
           <section className="admin-section">
             <h3>🔒 Senha da Área dos Pais</h3>
             <p className="section-hint">

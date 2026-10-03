@@ -43,6 +43,7 @@ export interface UserAccount {
   id: string;
   username: string;
   password: string;
+  approved: boolean;
 }
 
 export interface UserProgress {

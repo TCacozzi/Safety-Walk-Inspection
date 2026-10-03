@@ -3,6 +3,7 @@ import '../styles/SubjectSelector.css';
 
 interface SubjectSelectorProps {
   subjects: Subject[];
+  isApproved: boolean;
   onSelectSubject: (subject: Subject) => void;
   onAdminClick: () => void;
   onParentClick: () => void;
@@ -25,6 +26,7 @@ function getSubjectProgress(subjectId: string): SavedQuizProgress | null {
 
 export function SubjectSelector({
   subjects,
+  isApproved,
   onSelectSubject,
   onAdminClick,
   onParentClick,
@@ -37,7 +39,7 @@ export function SubjectSelector({
       <div className="selector-header">
         <div className="header-title">
           <h2>📚 Escolha a Matéria</h2>
-          <p className="subtitle">Bem-vindo, Lorenzo Cacozzi!</p>
+          <p className="subtitle">Bem-vindo!</p>
         </div>
         <div className="header-actions">
           <button className="btn-admin" onClick={onParentClick} title="Área dos Pais">
@@ -49,6 +51,17 @@ export function SubjectSelector({
         </div>
       </div>
 
+      {!isApproved ? (
+        <div className="pending-approval">
+          <div className="pending-icon">⏳</div>
+          <h3>Aguardando aprovação do administrador</h3>
+          <p>
+            Seu cadastro foi criado com sucesso! Peça para seu responsável acessar
+            "🔐 Acesso Administrador" na tela de login e aprovar seu acesso para
+            liberar as matérias.
+          </p>
+        </div>
+      ) : (
       <div className="subjects-grid">
         {enabledSubjects.length === 0 && disabledSubjects.length === 0 ? (
           <div className="empty-state">
@@ -119,6 +132,7 @@ export function SubjectSelector({
           </>
         )}
       </div>
+      )}
     </div>
   );
 }

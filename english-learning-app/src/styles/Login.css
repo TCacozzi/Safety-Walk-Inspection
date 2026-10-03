@@ -130,6 +130,20 @@
   box-shadow: 0 10px 25px -5px rgba(0, 123, 255, 0.4);
 }
 
+.login-toggle-mode {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+.login-toggle-mode:hover {
+  text-decoration: underline;
+}
+
 .login-admin-link {
   background: none;
   border: none;

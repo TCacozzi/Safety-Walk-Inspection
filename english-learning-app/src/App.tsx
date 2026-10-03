@@ -5,6 +5,7 @@ import { Lesson } from './components/Lesson';
 import { ParentAccess } from './components/ParentAccess';
 import { StudentProfileSetup } from './components/StudentProfileSetup';
 import { Login } from './components/Login';
+import { getUsers } from './utils/userAccounts';
 import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile } from './types';
 import './App.css';
 
@@ -59,6 +60,14 @@ function App() {
     const savedProfile = localStorage.getItem(`studentProfile_${currentUserId}`);
     setStudentProfile(savedProfile ? JSON.parse(savedProfile) : null);
   }, [currentUserId]);
+
+  // Sessions from before multi-user accounts existed may have isLoggedIn set
+  // without a currentUserId; force a fresh login so the account is known.
+  useEffect(() => {
+    if (isAuthenticated && !currentUserId) {
+      handleLogout();
+    }
+  }, [isAuthenticated, currentUserId]);
 
   const handleLoginSuccess = (userId: string) => {
     localStorage.setItem('isLoggedIn', 'true');
@@ -117,6 +126,8 @@ function App() {
   };
 
   const handleSelectSubject = (subject: Subject) => {
+    const user = getUsers().find((u) => u.id === currentUserId);
+    if (!user?.approved) return;
     setSelectedSubject(subject);
     setCurrentScreen('lesson');
   };
@@ -171,6 +182,9 @@ function App() {
       />
     );
   }
+
+  const currentUser = getUsers().find((u) => u.id === currentUserId);
+  const isApproved = currentUser?.approved ?? false;
 
   return (
     <div className="app">
@@ -236,6 +250,7 @@ function App() {
         {currentScreen === 'selector' && (
           <SubjectSelector
             subjects={subjects}
+            isApproved={isApproved}
             onSelectSubject={handleSelectSubject}
             onAdminClick={() => setCurrentScreen('admin')}
             onParentClick={() => setCurrentScreen('parent')}

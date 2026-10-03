@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { UserAccount } from '../types';
-import { getUsers, addUser, removeUser } from '../utils/userAccounts';
+import { getUsers, addUser, removeUser, approveUser } from '../utils/userAccounts';
 import '../styles/AdminUsersPanel.css';
 
 interface AdminUsersPanelProps {
@@ -44,7 +44,7 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
       return;
     }
 
-    const updated = addUser(newUsername.trim(), newPassword);
+    const updated = addUser(newUsername.trim(), newPassword, true);
     setUsers(updated);
     setNewUsername('');
     setNewPassword('');
@@ -56,6 +56,11 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
       localStorage.removeItem(`studentProfile_${user.id}`);
       setUsers(updated);
     }
+  };
+
+  const handleApproveUser = (user: UserAccount) => {
+    const updated = approveUser(user.id);
+    setUsers(updated);
   };
 
   return (
@@ -98,10 +103,22 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
                   <div className="users-list">
                     {users.map((user) => (
                       <div key={user.id} className="user-item">
-                        <span className="user-name">{user.username}</span>
-                        <button className="btn-delete" onClick={() => handleRemoveUser(user)}>
-                          🗑️
-                        </button>
+                        <div className="user-info">
+                          <span className="user-name">{user.username}</span>
+                          <span className={`user-status ${user.approved ? 'approved' : 'pending'}`}>
+                            {user.approved ? '✅ Aprovado' : '⏳ Pendente'}
+                          </span>
+                        </div>
+                        <div className="user-actions">
+                          {!user.approved && (
+                            <button className="btn-approve" onClick={() => handleApproveUser(user)}>
+                              ✅ Aprovar
+                            </button>
+                          )}
+                          <button className="btn-delete" onClick={() => handleRemoveUser(user)}>
+                            🗑️
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

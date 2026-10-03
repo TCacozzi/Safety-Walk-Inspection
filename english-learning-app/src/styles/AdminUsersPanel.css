@@ -91,11 +91,53 @@
   background: var(--bg-secondary);
   border: 2px solid var(--border);
   border-radius: 0.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .user-name {
   font-weight: 600;
   color: var(--text);
+}
+
+.user-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.user-status.approved {
+  color: var(--success);
+}
+
+.user-status.pending {
+  color: var(--accent);
+}
+
+.user-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-approve {
+  background: var(--success);
+  color: white;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s;
+}
+
+.btn-approve:hover {
+  transform: translateY(-2px);
 }
 
 .add-user-form {

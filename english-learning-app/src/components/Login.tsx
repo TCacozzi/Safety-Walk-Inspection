@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { findUser, getUsers } from '../utils/userAccounts';
+import { findUser, getUsers, addUser } from '../utils/userAccounts';
 import { AdminUsersPanel } from './AdminUsersPanel';
 import '../styles/Login.css';
 
@@ -8,27 +8,49 @@ interface LoginProps {
 }
 
 export function Login({ onLoginSuccess }: LoginProps) {
+  const [mode, setMode] = useState<'login' | 'create'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  const hasUsers = getUsers().length > 0;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!hasUsers) {
-      setError('Nenhum usuário cadastrado. Peça ao seu responsável para criar seu acesso em "Acesso Administrador".');
-      return;
-    }
-
+  const handleLogin = () => {
     const user = findUser(username.trim(), password);
     if (user) {
       setError('');
       onLoginSuccess(user.id);
     } else {
       setError('Usuário ou senha incorretos.');
+    }
+  };
+
+  const handleCreateAccount = () => {
+    if (!username.trim() || !password) {
+      setError('Preencha usuário e senha.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('As senhas não conferem.');
+      return;
+    }
+    if (getUsers().some((u) => u.username === username.trim())) {
+      setError('Já existe uma conta com esse usuário.');
+      return;
+    }
+
+    const updated = addUser(username.trim(), password, false);
+    const newUser = updated[updated.length - 1];
+    setError('');
+    onLoginSuccess(newUser.id);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mode === 'login') {
+      handleLogin();
+    } else {
+      handleCreateAccount();
     }
   };
 
@@ -40,7 +62,9 @@ export function Login({ onLoginSuccess }: LoginProps) {
         </div>
 
         <div className="login-form-side">
-          <h2 className="login-title">Bem-vindo de volta!</h2>
+          <h2 className="login-title">
+            {mode === 'login' ? 'Bem-vindo de volta!' : 'Vamos criar sua conta!'}
+          </h2>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <input
@@ -56,13 +80,31 @@ export function Login({ onLoginSuccess }: LoginProps) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Senha"
             />
+            {mode === 'create' && (
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmar Senha"
+              />
+            )}
 
             {error && <p className="login-error">{error}</p>}
 
             <button type="submit" className="login-submit">
-              Entrar 🚀
+              {mode === 'login' ? 'Entrar 🚀' : 'Criar Conta 🎉'}
             </button>
           </form>
+
+          <button
+            className="login-toggle-mode"
+            onClick={() => {
+              setMode(mode === 'login' ? 'create' : 'login');
+              setError('');
+            }}
+          >
+            {mode === 'login' ? 'Criar uma nova conta' : 'Já tenho uma conta'}
+          </button>
 
           <button className="login-admin-link" onClick={() => setShowAdminPanel(true)}>
             🔐 Acesso Administrador

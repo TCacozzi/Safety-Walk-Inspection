@@ -87,6 +87,34 @@
   margin: 0.5rem 0;
 }
 
+.pending-approval {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 193, 7, 0.08) 100%);
+  border-radius: 1rem;
+  border: 2px dashed var(--accent);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pending-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.pending-approval h3 {
+  color: var(--text);
+  font-size: 1.3rem;
+  margin: 0 0 1rem 0;
+}
+
+.pending-approval p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
 .subjects-section {
   margin-bottom: 3rem;
 }

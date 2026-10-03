@@ -6,7 +6,9 @@ export function getUsers(): UserAccount[] {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const users: UserAccount[] = JSON.parse(saved);
+      // Accounts created before the approval field existed are already in use; grandfather them in as approved.
+      return users.map((u) => ({ ...u, approved: u.approved ?? true }));
     } catch {
       return [];
     }
@@ -18,7 +20,7 @@ export function getUsers(): UserAccount[] {
     try {
       const parsed = JSON.parse(legacy);
       const migrated: UserAccount[] = [
-        { id: `user_${Date.now()}`, username: parsed.username, password: parsed.password },
+        { id: `user_${Date.now()}`, username: parsed.username, password: parsed.password, approved: true },
       ];
       saveUsers(migrated);
       localStorage.removeItem('loginCredentials');
@@ -35,9 +37,9 @@ export function saveUsers(users: UserAccount[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
 }
 
-export function addUser(username: string, password: string): UserAccount[] {
+export function addUser(username: string, password: string, approved: boolean): UserAccount[] {
   const users = getUsers();
-  const newUser: UserAccount = { id: `user_${Date.now()}`, username, password };
+  const newUser: UserAccount = { id: `user_${Date.now()}`, username, password, approved };
   const updated = [...users, newUser];
   saveUsers(updated);
   return updated;
@@ -45,6 +47,12 @@ export function addUser(username: string, password: string): UserAccount[] {
 
 export function removeUser(id: string): UserAccount[] {
   const updated = getUsers().filter((u) => u.id !== id);
+  saveUsers(updated);
+  return updated;
+}
+
+export function approveUser(id: string): UserAccount[] {
+  const updated = getUsers().map((u) => (u.id === id ? { ...u, approved: true } : u));
   saveUsers(updated);
   return updated;
 }

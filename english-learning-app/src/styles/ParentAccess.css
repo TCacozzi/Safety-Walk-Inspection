@@ -69,6 +69,30 @@
   font-weight: 600;
 }
 
+.student-select {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.student-select label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.student-select select {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text);
+  font-size: 1rem;
+}
+
 .reset-list {
   display: flex;
   flex-direction: column;

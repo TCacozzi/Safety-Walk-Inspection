@@ -1,31 +1,19 @@
-import type { ExerciseResult, Subject } from '../types';
+import type { Subject } from '../types';
+import { getQuizProgress } from '../utils/userProgress';
 import '../styles/SubjectSelector.css';
 
 interface SubjectSelectorProps {
   subjects: Subject[];
+  userId: string;
   isApproved: boolean;
   onSelectSubject: (subject: Subject) => void;
   onAdminClick: () => void;
   onParentClick: () => void;
 }
 
-interface SavedQuizProgress {
-  results: ExerciseResult[];
-}
-
-function getSubjectProgress(subjectId: string): SavedQuizProgress | null {
-  const saved = localStorage.getItem(`quizProgress_${subjectId}`);
-  if (!saved) return null;
-  try {
-    const parsed = JSON.parse(saved);
-    return { results: parsed.results ?? [] };
-  } catch {
-    return null;
-  }
-}
-
 export function SubjectSelector({
   subjects,
+  userId,
   isApproved,
   onSelectSubject,
   onAdminClick,
@@ -75,9 +63,9 @@ export function SubjectSelector({
                 <h3 className="section-title">📖 Matérias Disponíveis</h3>
                 <div className="grid">
                   {enabledSubjects.map((subject) => {
-                    const progress = getSubjectProgress(subject.id);
-                    const answeredCount = progress?.results.length ?? 0;
-                    const correctCount = progress?.results.filter((r) => r.correct).length ?? 0;
+                    const progress = getQuizProgress(userId, subject.id);
+                    const answeredCount = progress.results.length;
+                    const correctCount = progress.results.filter((r) => r.correct).length;
                     const accuracyPercent =
                       answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
                     const inProgress = answeredCount > 0;

@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import type { Question, ExerciseResult } from '../types';
+import { getQuizProgress, saveQuizProgress, clearQuizProgress } from '../utils/userProgress';
 import '../styles/Quiz.css';
 
-interface QuizProgress {
-  currentIndex: number;
-  answers: Record<string, string>;
-  results: ExerciseResult[];
-}
-
 interface QuizProps {
+  userId: string;
   subjectId: string;
   questions: Question[];
   onComplete: (results: ExerciseResult[]) => void;
@@ -16,33 +12,15 @@ interface QuizProps {
   onExit: () => void;
 }
 
-const getStorageKey = (subjectId: string) => `quizProgress_${subjectId}`;
-
-const loadProgress = (subjectId: string): QuizProgress => {
-  const saved = localStorage.getItem(getStorageKey(subjectId));
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      return {
-        currentIndex: parsed.currentIndex ?? 0,
-        answers: parsed.answers ?? {},
-        results: parsed.results ?? [],
-      };
-    } catch {
-      return { currentIndex: 0, answers: {}, results: [] };
-    }
-  }
-  return { currentIndex: 0, answers: {}, results: [] };
-};
-
 export const Quiz: React.FC<QuizProps> = ({
+  userId,
   subjectId,
   questions,
   onComplete,
   onBack,
   onExit,
 }) => {
-  const initialProgress = loadProgress(subjectId);
+  const initialProgress = getQuizProgress(userId, subjectId);
 
   const [currentIndex, setCurrentIndex] = useState(initialProgress.currentIndex);
   const [answers, setAnswers] = useState<Record<string, string>>(initialProgress.answers);
@@ -55,8 +33,8 @@ export const Quiz: React.FC<QuizProps> = ({
   const userAnswer = answers[currentQuestion.id];
   const isCorrect = userAnswer === currentQuestion.answer.toString();
 
-  const saveProgress = (next: QuizProgress) => {
-    localStorage.setItem(getStorageKey(subjectId), JSON.stringify(next));
+  const saveProgress = (next: { currentIndex: number; answers: Record<string, string>; results: ExerciseResult[] }) => {
+    saveQuizProgress(userId, subjectId, next);
   };
 
   const handleExit = () => {
@@ -94,7 +72,7 @@ export const Quiz: React.FC<QuizProps> = ({
       setShowQuestion(false);
       saveProgress({ currentIndex: nextIndex, answers, results });
     } else {
-      localStorage.removeItem(getStorageKey(subjectId));
+      clearQuizProgress(userId, subjectId);
       onComplete(results);
     }
   };

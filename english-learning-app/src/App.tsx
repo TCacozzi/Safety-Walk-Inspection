@@ -6,6 +6,7 @@ import { ParentAccess } from './components/ParentAccess';
 import { StudentProfileSetup } from './components/StudentProfileSetup';
 import { Login } from './components/Login';
 import { getUsers } from './utils/userAccounts';
+import { getUserProgress, saveUserProgress, clearQuizProgress } from './utils/userProgress';
 import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile } from './types';
 import './App.css';
 
@@ -25,40 +26,25 @@ function App() {
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
 
-  // Load subjects and progress from localStorage
+  // Load subjects from localStorage
   useEffect(() => {
     const savedSubjects = localStorage.getItem('lorenzoDynamicSubjects');
     if (savedSubjects) {
       setSubjects(JSON.parse(savedSubjects));
     }
-
-    const savedProgress = localStorage.getItem('lorenzoDynamicProgress');
-    if (savedProgress) {
-      setProgress(JSON.parse(savedProgress));
-    } else {
-      const newProgress: UserProgress = {
-        userId: `lorenzo_${Date.now()}`,
-        currentDay: 1,
-        completedDays: [],
-        scores: {},
-        totalPoints: 0,
-        lastAccessed: new Date(),
-        subjectScores: {},
-      };
-      setProgress(newProgress);
-      localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(newProgress));
-    }
   }, []);
 
-  // Load the logged-in user's own profile whenever the user changes
+  // Load the logged-in user's own profile and progress whenever the user changes
   useEffect(() => {
     if (!currentUserId) {
       setStudentProfile(null);
+      setProgress(null);
       return;
     }
 
     const savedProfile = localStorage.getItem(`studentProfile_${currentUserId}`);
     setStudentProfile(savedProfile ? JSON.parse(savedProfile) : null);
+    setProgress(getUserProgress(currentUserId));
   }, [currentUserId]);
 
   // Sessions from before multi-user accounts existed may have isLoggedIn set
@@ -108,21 +94,24 @@ function App() {
     localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(newSubjects));
   };
 
-  const handleResetSubjectProgress = (subjectId: string) => {
-    localStorage.removeItem(`quizProgress_${subjectId}`);
+  const handleResetSubjectProgress = (userId: string, subjectId: string) => {
+    clearQuizProgress(userId, subjectId);
 
-    if (!progress) return;
-    const removedPoints = progress.subjectScores?.[subjectId] || 0;
+    const userProgress = getUserProgress(userId);
+    const removedPoints = userProgress.subjectScores?.[subjectId] || 0;
     const updatedProgress: UserProgress = {
-      ...progress,
-      totalPoints: progress.totalPoints - removedPoints,
+      ...userProgress,
+      totalPoints: userProgress.totalPoints - removedPoints,
       subjectScores: {
-        ...progress.subjectScores,
+        ...userProgress.subjectScores,
         [subjectId]: 0,
       },
     };
-    setProgress(updatedProgress);
-    localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(updatedProgress));
+    saveUserProgress(userId, updatedProgress);
+
+    if (userId === currentUserId) {
+      setProgress(updatedProgress);
+    }
   };
 
   const handleSelectSubject = (subject: Subject) => {
@@ -137,7 +126,7 @@ function App() {
   };
 
   const handleLessonComplete = (_day: number, results: ExerciseResult[]) => {
-    if (!progress || !selectedSubject) return;
+    if (!progress || !selectedSubject || !currentUserId) return;
 
     const totalPoints = results.reduce((sum, r) => sum + r.points, 0);
     const updatedProgress: UserProgress = {
@@ -151,7 +140,7 @@ function App() {
     };
 
     setProgress(updatedProgress);
-    localStorage.setItem('lorenzoDynamicProgress', JSON.stringify(updatedProgress));
+    saveUserProgress(currentUserId, updatedProgress);
     setCurrentScreen('selector');
   };
 
@@ -247,9 +236,10 @@ function App() {
           />
         )}
 
-        {currentScreen === 'selector' && (
+        {currentScreen === 'selector' && currentUserId && (
           <SubjectSelector
             subjects={subjects}
+            userId={currentUserId}
             isApproved={isApproved}
             onSelectSubject={handleSelectSubject}
             onAdminClick={() => setCurrentScreen('admin')}
@@ -265,9 +255,10 @@ function App() {
           />
         )}
 
-        {currentScreen === 'lesson' && selectedSubject && (
+        {currentScreen === 'lesson' && selectedSubject && currentUserId && (
           <Lesson
             lesson={convertSubjectToLesson(selectedSubject)}
+            userId={currentUserId}
             onBack={handleBackToSelector}
             onComplete={handleLessonComplete}
             onExitToMenu={handleBackToSelector}

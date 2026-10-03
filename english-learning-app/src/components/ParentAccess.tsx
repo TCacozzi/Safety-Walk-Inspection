@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import type { Subject, UserAccount } from '../types';
 import { getUsers, addUser, removeUser, approveUser } from '../utils/userAccounts';
+import { getQuizProgress } from '../utils/userProgress';
 import '../styles/ParentAccess.css';
 
 interface ParentAccessProps {
   subjects: Subject[];
-  onResetSubjectProgress: (subjectId: string) => void;
+  onResetSubjectProgress: (userId: string, subjectId: string) => void;
   onClose: () => void;
 }
 
@@ -16,6 +17,7 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
 
   const handleUnlock = () => {
     const savedPasscode = localStorage.getItem('parentPasscode');
@@ -28,7 +30,9 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
     if (passcodeInput === savedPasscode) {
       setUnlocked(true);
       setError('');
-      setUsers(getUsers());
+      const loadedUsers = getUsers();
+      setUsers(loadedUsers);
+      setSelectedUserId(loadedUsers[0]?.id ?? '');
     } else {
       setError('Senha incorreta. Tente novamente.');
     }
@@ -36,9 +40,11 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
   };
 
   const handleReset = (subject: Subject) => {
-    if (confirm(`Resetar todo o progresso de "${subject.name}"? O aluno vai recomeçar do zero.`)) {
-      onResetSubjectProgress(subject.id);
-      alert(`Progresso de "${subject.name}" resetado!`);
+    const student = users.find((u) => u.id === selectedUserId);
+    if (!student) return;
+    if (confirm(`Resetar o progresso de "${subject.name}" para "${student.username}"? O aluno vai recomeçar do zero.`)) {
+      onResetSubjectProgress(selectedUserId, subject.id);
+      alert(`Progresso de "${subject.name}" resetado para "${student.username}"!`);
     }
   };
 
@@ -63,6 +69,9 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
       const updated = removeUser(user.id);
       localStorage.removeItem(`studentProfile_${user.id}`);
       setUsers(updated);
+      if (selectedUserId === user.id) {
+        setSelectedUserId(updated[0]?.id ?? '');
+      }
     }
   };
 
@@ -154,32 +163,63 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
                 </div>
               </section>
 
-            <div className="reset-list">
-              <p className="section-hint">
-                Resetar uma matéria apaga as respostas e a pontuação do aluno, para que ele comece do zero. Os exercícios gerados continuam salvos.
-              </p>
-              {subjects.length === 0 ? (
-                <p className="empty">Nenhuma matéria cadastrada ainda</p>
+            <section className="users-section">
+              <h3>📈 Progresso por Aluno</h3>
+              {users.length === 0 ? (
+                <p className="empty">Nenhum usuário cadastrado ainda</p>
               ) : (
-                subjects.map((subject) => (
-                  <div key={subject.id} className="reset-item">
-                    <div className="subject-info">
-                      <h4>{subject.name}</h4>
-                      <p className="subject-status">
-                        {subject.enabled ? `${subject.questions.length} exercícios` : 'Sem conteúdo'}
-                      </p>
-                    </div>
-                    <button
-                      className="btn-reset"
-                      onClick={() => handleReset(subject)}
-                      disabled={!subject.enabled}
+                <>
+                  <div className="student-select">
+                    <label>Selecione o aluno:</label>
+                    <select
+                      value={selectedUserId}
+                      onChange={(e) => setSelectedUserId(e.target.value)}
                     >
-                      🔄 Resetar Progresso
-                    </button>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.username}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                ))
+
+                  <div className="reset-list">
+                    <p className="section-hint">
+                      Resetar uma matéria apaga as respostas e a pontuação desse aluno, para que ele comece do zero. Os exercícios gerados continuam salvos.
+                    </p>
+                    {subjects.length === 0 ? (
+                      <p className="empty">Nenhuma matéria cadastrada ainda</p>
+                    ) : (
+                      subjects.map((subject) => {
+                        const subjectProgress = selectedUserId
+                          ? getQuizProgress(selectedUserId, subject.id)
+                          : { results: [] };
+                        const answeredCount = subjectProgress.results.length;
+
+                        return (
+                          <div key={subject.id} className="reset-item">
+                            <div className="subject-info">
+                              <h4>{subject.name}</h4>
+                              <p className="subject-status">
+                                {subject.enabled ? `${subject.questions.length} exercícios` : 'Sem conteúdo'}
+                                {answeredCount > 0 && ` • ${answeredCount} respondidas`}
+                              </p>
+                            </div>
+                            <button
+                              className="btn-reset"
+                              onClick={() => handleReset(subject)}
+                              disabled={!subject.enabled}
+                            >
+                              🔄 Resetar Progresso
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
               )}
-            </div>
+            </section>
             </>
           )}
         </div>

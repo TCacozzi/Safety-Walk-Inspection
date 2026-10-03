@@ -1,36 +1,20 @@
 import { useState } from 'react';
 import type { Lesson as LessonType, ExerciseResult } from '../types';
 import { Quiz } from './Quiz';
+import { getQuizProgress } from '../utils/userProgress';
 import '../styles/Lesson.css';
 
 interface LessonProps {
   lesson: LessonType;
+  userId: string;
   onBack: () => void;
   onComplete: (day: number, results: ExerciseResult[]) => void;
   onExitToMenu: () => void;
 }
 
-interface SavedQuizProgress {
-  currentIndex: number;
-  results: ExerciseResult[];
-}
-
-const loadSavedProgress = (subjectId: string): SavedQuizProgress | null => {
-  const saved = localStorage.getItem(`quizProgress_${subjectId}`);
-  if (!saved) return null;
-  try {
-    const parsed = JSON.parse(saved);
-    return {
-      currentIndex: parsed.currentIndex ?? 0,
-      results: parsed.results ?? [],
-    };
-  } catch {
-    return null;
-  }
-};
-
 export const Lesson: React.FC<LessonProps> = ({
   lesson,
+  userId,
   onBack,
   onComplete,
   onExitToMenu,
@@ -51,6 +35,7 @@ export const Lesson: React.FC<LessonProps> = ({
   if (showQuiz && !quizComplete) {
     return (
       <Quiz
+        userId={userId}
         subjectId={lesson.id}
         questions={lesson.questions}
         onComplete={handleQuizComplete}
@@ -64,7 +49,7 @@ export const Lesson: React.FC<LessonProps> = ({
   const maxPoints = lesson.questions.reduce((sum, q) => sum + q.points, 0);
   const correctAnswers = quizResults.filter((r) => r.correct).length;
 
-  const savedProgress = quizComplete ? null : loadSavedProgress(lesson.id);
+  const savedProgress = quizComplete ? null : getQuizProgress(userId, lesson.id);
   const answeredCount = savedProgress?.results.length ?? 0;
   const correctCount = savedProgress?.results.filter((r) => r.correct).length ?? 0;
   const accuracyPercent = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;

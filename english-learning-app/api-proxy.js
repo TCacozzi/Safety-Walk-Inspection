@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import { Resend } from 'resend';
+import Anthropic from '@anthropic-ai/sdk';
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { z } from 'zod';
 import * as db from './db.js';
 
 const app = express();
@@ -25,6 +28,24 @@ if (!db.dbEnabled) {
 }
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+
+const ExercisesSchema = z.object({
+  summary: z.string(),
+  topics: z.array(z.string()),
+  questions: z.array(
+    z.object({
+      id: z.string(),
+      type: z.literal('multiple-choice'),
+      context: z.string(),
+      question: z.string(),
+      options: z.array(z.string()),
+      answer: z.string(),
+      explanation: z.string(),
+      points: z.number(),
+    })
+  ),
+});
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -54,12 +75,11 @@ app.post('/api/generate-exercises', async (req, res) => {
     const instructions = 'Você é um professor de inglês preparando uma prova de revisão para um aluno. Leia e entenda cuidadosamente TODO o conteúdo fornecido (é uma prova/material de inglês) antes de criar as perguntas.\n\n' +
       'Gere NO MÍNIMO 30 exercícios de múltipla escolha, todos diretamente correlacionados ao conteúdo fornecido (vocabulário, gramática, textos, diálogos, exercícios que aparecem no material). Não invente temas que não estejam no material. Varie o foco das perguntas (vocabulário, gramática, compreensão de texto, tradução) sempre com base no que está no conteúdo.\n\n';
 
-    let prompt = instructions;
+    const fieldGuide = 'O campo "summary" é um resumo geral e curto do material, em português. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada item combinando o nome do tema com uma breve explicação do que será cobrado sobre ele (ex: "Verbo TO BE no presente: usar am/is/are com os pronomes corretos"). O campo "type" de cada pergunta deve ser sempre EXATAMENTE a string "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas.';
+
     const messages = [];
 
     if (imageBase64) {
-      prompt = instructions;
-
       const ext = (fileExtension || 'jpeg').toLowerCase();
       const mediaTypeMap = {
         'png': 'image/png',
@@ -85,24 +105,7 @@ app.post('/api/generate-exercises', async (req, res) => {
           },
           {
             type: 'text',
-            text: prompt + `Retorne APENAS um JSON válido com esta estrutura:
-{
-  "summary": "Um parágrafo curto (2 a 4 frases) resumindo, em português, o que esse material/prova aborda no geral",
-  "topics": ["Tema 1 estudado no material: breve explicação de 1 frase do que é cobrado", "Tema 2 estudado no material: breve explicação de 1 frase", "..."],
-  "questions": [
-    {
-      "id": "1",
-      "type": "multiple-choice",
-      "context": "Breve texto explicando o conceito/trecho do material antes da pergunta, para o aluno entender o que será cobrado",
-      "question": "Pergunta aqui?",
-      "options": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
-      "answer": "A) Opção 1",
-      "explanation": "Breve explicação de por que essa é a resposta correta",
-      "points": 10
-    }
-  ]
-}
-O campo "summary" é um resumo geral e curto do material, em português. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada item combinando o nome do tema com uma breve explicação do que será cobrado sobre ele (ex: "Verbo TO BE no presente: usar am/is/are com os pronomes corretos"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+            text: instructions + fieldGuide,
           },
         ],
       });
@@ -110,24 +113,7 @@ O campo "summary" é um resumo geral e curto do material, em português. O campo
       console.log('📝 Processando texto');
       messages.push({
         role: 'user',
-        content: prompt + `Conteúdo:\n${textReference}\n\nRetorne APENAS um JSON válido com esta estrutura:
-{
-  "summary": "Um parágrafo curto (2 a 4 frases) resumindo, em português, o que esse material/prova aborda no geral",
-  "topics": ["Tema 1 estudado no material: breve explicação de 1 frase do que é cobrado", "Tema 2 estudado no material: breve explicação de 1 frase", "..."],
-  "questions": [
-    {
-      "id": "1",
-      "type": "multiple-choice",
-      "context": "Breve texto explicando o conceito/trecho do material antes da pergunta, para o aluno entender o que será cobrado",
-      "question": "Pergunta aqui?",
-      "options": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
-      "answer": "A) Opção 1",
-      "explanation": "Breve explicação de por que essa é a resposta correta",
-      "points": 10
-    }
-  ]
-}
-O campo "summary" é um resumo geral e curto do material, em português. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada item combinando o nome do tema com uma breve explicação do que será cobrado sobre ele (ex: "Verbo TO BE no presente: usar am/is/are com os pronomes corretos"). O campo "type" deve ser sempre "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas no array "questions".`,
+        content: `${instructions}Conteúdo:\n${textReference}\n\n${fieldGuide}`,
       });
     } else {
       console.log('❌ Sem imagem ou texto');
@@ -136,31 +122,27 @@ O campo "summary" é um resumo geral e curto do material, em português. O campo
 
     console.log('🚀 Enviando para API Claude...');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 8192,
-        messages: messages,
-      }),
+    const response = await anthropic.messages.parse({
+      model: 'claude-haiku-4-5',
+      max_tokens: 16000,
+      messages,
+      output_config: { format: zodOutputFormat(ExercisesSchema) },
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('❌ API Error Response:', error);
-      return res.status(response.status).json({ error: 'Erro na API Claude', details: error });
+    if (!response.parsed_output) {
+      console.error('❌ Resposta não pôde ser estruturada. stop_reason:', response.stop_reason);
+      return res.status(502).json({
+        error: 'A IA não conseguiu gerar os exercícios nesse formato. Tente novamente ou use um texto mais curto.',
+      });
     }
 
-    const data = await response.json();
     console.log('✅ Sucesso! Resposta da API recebida.');
-    res.json(data);
+    res.json(response.parsed_output);
   } catch (error) {
     console.error('❌ Server Error:', error.message);
+    if (error instanceof Anthropic.APIError) {
+      return res.status(error.status || 500).json({ error: 'Erro na API Claude', details: error.message });
+    }
     res.status(500).json({ error: 'Erro no servidor', details: error.message });
   }
 });

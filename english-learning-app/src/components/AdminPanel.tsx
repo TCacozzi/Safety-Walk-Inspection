@@ -53,16 +53,6 @@ export function AdminPanel({
     setPasscodeInput('');
   };
 
-  const extractJSON = (text: string) => {
-    const withoutFences = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
-    const start = withoutFences.indexOf('{');
-    const end = withoutFences.lastIndexOf('}');
-    if (start === -1 || end === -1) {
-      throw new Error('Resposta da API não contém um JSON válido');
-    }
-    return JSON.parse(withoutFences.slice(start, end + 1));
-  };
-
   const handleSaveParentPasscode = async () => {
     if (!/^\d{6}$/.test(parentPasscode)) {
       alert('A senha deve ter exatamente 6 números.');
@@ -118,14 +108,11 @@ export function AdminPanel({
         }),
       });
 
+      const parsed = await response.json();
       if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+        throw new Error(parsed.error || 'Erro ao gerar exercícios');
       }
 
-      const data = await response.json();
-      const content = data.content[0].text;
-
-      const parsed = extractJSON(content);
       const subject = subjects.find((s) => s.id === selectedSubjectId);
 
       if (subject) {
@@ -168,14 +155,11 @@ export function AdminPanel({
         }),
       });
 
+      const parsed = await response.json();
       if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+        throw new Error(parsed.error || 'Erro ao gerar exercícios');
       }
 
-      const data = await response.json();
-      const content = data.content[0].text;
-
-      const parsed = extractJSON(content);
       const subject = subjects.find((s) => s.id === selectedSubjectId);
 
       if (subject) {

@@ -80,9 +80,16 @@ export async function usernameExists(username) {
 }
 
 export async function findUserByEmail(email) {
-  const { data, error } = await supabase.from('users').select('*').eq('email', email).maybeSingle();
+  // email is not unique (only username is), so more than one account can
+  // share an email address; pick the most recently created match.
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .order('created_at', { ascending: false })
+    .limit(1);
   if (error) throw error;
-  return rowToUser(data);
+  return rowToUser(data?.[0] ?? null);
 }
 
 export async function updateUserPassword(userId, password) {

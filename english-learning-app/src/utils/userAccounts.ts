@@ -61,6 +61,15 @@ export async function validateParentPassword(userId: string, password: string): 
   return data.valid;
 }
 
+export async function setUserPassword(id: string, password: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/users/${id}/password`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) return parseErrorOr(res, 'Erro ao trocar senha');
+}
+
 export async function requestPasswordReset(email: string): Promise<void> {
   const res = await fetch(`${API_URL}/api/users/forgot-password`, {
     method: 'POST',

@@ -256,6 +256,15 @@ app.post('/api/users/:id/validate-parent-password', requireDb, asyncHandler(asyn
   res.json({ valid });
 }));
 
+app.put('/api/users/:id/password', requireDb, asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: 'password é obrigatório' });
+  }
+  await db.updateUserPassword(req.params.id, password);
+  res.json({ saved: true });
+}));
+
 app.post('/api/users/forgot-password', requireDb, asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) {

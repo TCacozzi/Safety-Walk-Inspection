@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { UserAccount } from '../types';
-import { getUsers, addUser, removeUser, approveUser } from '../utils/userAccounts';
+import { getUsers, addUser, removeUser, approveUser, setUserPassword } from '../utils/userAccounts';
 import { validateAdminPasscode } from '../utils/adminPasscode';
 import { sendAccountEmail } from '../utils/email';
 import '../styles/AdminUsersPanel.css';
@@ -71,6 +71,18 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
     sendAccountEmail(user.email, 'approved', user.username);
   };
 
+  const handleChangePassword = async (user: UserAccount) => {
+    const newPassword = prompt(`Nova senha para "${user.username}" (sem precisar do e-mail dele):`);
+    if (!newPassword) return;
+
+    try {
+      await setUserPassword(user.id, newPassword);
+      alert(`Senha de "${user.username}" atualizada com sucesso!`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao trocar senha.');
+    }
+  };
+
   return (
     <div className="admin-users-overlay">
       <div className="admin-users-panel">
@@ -124,6 +136,9 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
                               ✅ Aprovar
                             </button>
                           )}
+                          <button className="btn-primary" onClick={() => handleChangePassword(user)}>
+                            🔑 Trocar Senha
+                          </button>
                           <button className="btn-delete" onClick={() => handleRemoveUser(user)}>
                             🗑️
                           </button>

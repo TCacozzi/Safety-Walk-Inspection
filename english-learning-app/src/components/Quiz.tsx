@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Question, ExerciseResult } from '../types';
 import { getQuizProgress, saveQuizProgress, clearQuizProgress } from '../utils/userProgress';
 import '../styles/Quiz.css';
@@ -20,21 +20,34 @@ export const Quiz: React.FC<QuizProps> = ({
   onBack,
   onExit,
 }) => {
-  const initialProgress = getQuizProgress(userId, subjectId);
-
-  const [currentIndex, setCurrentIndex] = useState(initialProgress.currentIndex);
-  const [answers, setAnswers] = useState<Record<string, string>>(initialProgress.answers);
-  const [results, setResults] = useState<ExerciseResult[]>(initialProgress.results);
+  const [loaded, setLoaded] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [results, setResults] = useState<ExerciseResult[]>([]);
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    getQuizProgress(userId, subjectId).then((initialProgress) => {
+      setCurrentIndex(initialProgress.currentIndex);
+      setAnswers(initialProgress.answers);
+      setResults(initialProgress.results);
+      setLoaded(true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, subjectId]);
+
+  const saveProgress = (next: { currentIndex: number; answers: Record<string, string>; results: ExerciseResult[] }) => {
+    saveQuizProgress(userId, subjectId, next).catch((error) => console.error('Erro ao salvar progresso:', error));
+  };
+
+  if (!loaded) {
+    return null;
+  }
 
   const currentQuestion = questions[currentIndex];
   const isAnswered = answers[currentQuestion.id] !== undefined;
   const userAnswer = answers[currentQuestion.id];
   const isCorrect = userAnswer === currentQuestion.answer.toString();
-
-  const saveProgress = (next: { currentIndex: number; answers: Record<string, string>; results: ExerciseResult[] }) => {
-    saveQuizProgress(userId, subjectId, next);
-  };
 
   const handleExit = () => {
     saveProgress({ currentIndex, answers, results });
@@ -70,7 +83,7 @@ export const Quiz: React.FC<QuizProps> = ({
       setShowFeedback(null);
       saveProgress({ currentIndex: nextIndex, answers, results });
     } else {
-      clearQuizProgress(userId, subjectId);
+      clearQuizProgress(userId, subjectId).catch((error) => console.error('Erro ao limpar progresso:', error));
       onComplete(results);
     }
   };

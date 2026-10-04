@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { UserAccount } from '../types';
 import { getUsers, addUser, removeUser, approveUser } from '../utils/userAccounts';
+import { validateAdminPasscode } from '../utils/adminPasscode';
 import { sendAccountEmail } from '../utils/email';
 import '../styles/AdminUsersPanel.css';
 
@@ -19,25 +20,23 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
   const [newEmail, setNewEmail] = useState('');
   const [newParentPassword, setNewParentPassword] = useState('');
 
-  const handleUnlock = () => {
-    const savedPasscode = localStorage.getItem('parentPasscode');
+  const refreshUsers = () => {
+    getUsers().then(setUsers).catch((error) => console.error('Erro ao buscar usuários:', error));
+  };
 
-    if (!savedPasscode) {
-      setError('Nenhuma senha de administrador configurada ainda. Acesse ⚙️ Configurações, dentro do app, para criar uma senha de 6 números.');
-      return;
-    }
-
-    if (passcodeInput === savedPasscode) {
+  const handleUnlock = async () => {
+    const valid = await validateAdminPasscode(passcodeInput);
+    if (valid) {
       setUnlocked(true);
       setError('');
-      setUsers(getUsers());
+      refreshUsers();
     } else {
-      setError('Senha incorreta. Tente novamente.');
+      setError('Senha incorreta, ou nenhuma senha de administrador foi configurada ainda (acesse ⚙️ Configurações, dentro do app, para criar uma).');
     }
     setPasscodeInput('');
   };
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (!newUsername.trim() || !newPassword) {
       alert('Preencha usuário e senha.');
       return;
@@ -46,36 +45,29 @@ export function AdminUsersPanel({ onClose }: AdminUsersPanelProps) {
       alert('A senha dos pais deve ter exatamente 6 números.');
       return;
     }
-    if (users.some((u) => u.username === newUsername.trim())) {
-      alert('Já existe um usuário com esse nome.');
-      return;
-    }
 
-    const updated = addUser(
-      newUsername.trim(),
-      newPassword,
-      true,
-      newEmail.trim(),
-      newParentPassword
-    );
-    setUsers(updated);
-    setNewUsername('');
-    setNewPassword('');
-    setNewEmail('');
-    setNewParentPassword('');
+    try {
+      await addUser(newUsername.trim(), newPassword, true, newEmail.trim(), newParentPassword);
+      refreshUsers();
+      setNewUsername('');
+      setNewPassword('');
+      setNewEmail('');
+      setNewParentPassword('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao adicionar usuário.');
+    }
   };
 
-  const handleRemoveUser = (user: UserAccount) => {
+  const handleRemoveUser = async (user: UserAccount) => {
     if (confirm(`Remover o acesso de "${user.username}"? O perfil dele também será apagado.`)) {
-      const updated = removeUser(user.id);
-      localStorage.removeItem(`studentProfile_${user.id}`);
-      setUsers(updated);
+      await removeUser(user.id);
+      refreshUsers();
     }
   };
 
-  const handleApproveUser = (user: UserAccount) => {
-    const updated = approveUser(user.id);
-    setUsers(updated);
+  const handleApproveUser = async (user: UserAccount) => {
+    await approveUser(user.id);
+    refreshUsers();
     sendAccountEmail(user.email, 'approved', user.username);
   };
 

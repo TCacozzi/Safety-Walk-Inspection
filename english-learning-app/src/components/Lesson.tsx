@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Lesson as LessonType, ExerciseResult } from '../types';
 import { Quiz } from './Quiz';
 import { getQuizProgress } from '../utils/userProgress';
@@ -22,6 +22,16 @@ export const Lesson: React.FC<LessonProps> = ({
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
   const [quizResults, setQuizResults] = useState<ExerciseResult[]>([]);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+
+  useEffect(() => {
+    if (quizComplete) return;
+    getQuizProgress(userId, lesson.id).then((progress) => {
+      setAnsweredCount(progress.results.length);
+      setCorrectCount(progress.results.filter((r) => r.correct).length);
+    });
+  }, [userId, lesson.id, quizComplete]);
 
   const handleQuizComplete = (results: ExerciseResult[]) => {
     setQuizResults(results);
@@ -49,9 +59,6 @@ export const Lesson: React.FC<LessonProps> = ({
   const maxPoints = lesson.questions.reduce((sum, q) => sum + q.points, 0);
   const correctAnswers = quizResults.filter((r) => r.correct).length;
 
-  const savedProgress = quizComplete ? null : getQuizProgress(userId, lesson.id);
-  const answeredCount = savedProgress?.results.length ?? 0;
-  const correctCount = savedProgress?.results.filter((r) => r.correct).length ?? 0;
   const accuracyPercent = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
 
   return (

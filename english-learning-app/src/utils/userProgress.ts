@@ -1,44 +1,32 @@
 import type { ExerciseResult, UserProgress } from '../types';
 
-const progressKey = (userId: string) => `userProgress_${userId}`;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-export function getUserProgress(userId: string): UserProgress {
-  const saved = localStorage.getItem(progressKey(userId));
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      // fall through to default below
-    }
-  }
-
-  // Migrate the old single-shared progress to the first user who claims it.
-  const legacy = localStorage.getItem('lorenzoDynamicProgress');
-  if (legacy) {
-    try {
-      const parsed = JSON.parse(legacy);
-      const migrated: UserProgress = { ...parsed, userId };
-      saveUserProgress(userId, migrated);
-      localStorage.removeItem('lorenzoDynamicProgress');
-      return migrated;
-    } catch {
-      // fall through to default below
-    }
-  }
-
+export async function getUserProgress(userId: string): Promise<UserProgress> {
+  const res = await fetch(`${API_URL}/api/progress/${userId}`);
+  if (!res.ok) throw new Error('Erro ao buscar progresso');
+  const data = await res.json();
   return {
     userId,
     currentDay: 1,
     completedDays: [],
     scores: {},
-    totalPoints: 0,
-    lastAccessed: new Date(),
-    subjectScores: {},
+    totalPoints: data.totalPoints ?? 0,
+    lastAccessed: data.lastAccessed ? new Date(data.lastAccessed) : new Date(),
+    subjectScores: data.subjectScores ?? {},
   };
 }
 
-export function saveUserProgress(userId: string, progress: UserProgress) {
-  localStorage.setItem(progressKey(userId), JSON.stringify(progress));
+export async function saveUserProgress(userId: string, progress: UserProgress): Promise<void> {
+  await fetch(`${API_URL}/api/progress/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      totalPoints: progress.totalPoints,
+      subjectScores: progress.subjectScores ?? {},
+      lastAccessed: progress.lastAccessed,
+    }),
+  });
 }
 
 interface SavedQuizProgress {
@@ -47,50 +35,29 @@ interface SavedQuizProgress {
   results: ExerciseResult[];
 }
 
-const quizProgressKey = (userId: string, subjectId: string) => `quizProgress_${userId}_${subjectId}`;
-
-export function getQuizProgress(userId: string, subjectId: string): SavedQuizProgress {
-  const key = quizProgressKey(userId, subjectId);
-  const saved = localStorage.getItem(key);
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      return {
-        currentIndex: parsed.currentIndex ?? 0,
-        answers: parsed.answers ?? {},
-        results: parsed.results ?? [],
-      };
-    } catch {
-      // fall through to default below
-    }
-  }
-
-  // Migrate the old per-subject (not per-user) progress to the first user who opens it.
-  const legacyKey = `quizProgress_${subjectId}`;
-  const legacy = localStorage.getItem(legacyKey);
-  if (legacy) {
-    try {
-      const parsed = JSON.parse(legacy);
-      const migrated: SavedQuizProgress = {
-        currentIndex: parsed.currentIndex ?? 0,
-        answers: parsed.answers ?? {},
-        results: parsed.results ?? [],
-      };
-      localStorage.setItem(key, JSON.stringify(migrated));
-      localStorage.removeItem(legacyKey);
-      return migrated;
-    } catch {
-      // fall through to default below
-    }
-  }
-
-  return { currentIndex: 0, answers: {}, results: [] };
+export async function getQuizProgress(userId: string, subjectId: string): Promise<SavedQuizProgress> {
+  const res = await fetch(`${API_URL}/api/quiz-progress/${userId}/${subjectId}`);
+  if (!res.ok) return { currentIndex: 0, answers: {}, results: [] };
+  const data = await res.json();
+  return {
+    currentIndex: data.currentIndex ?? 0,
+    answers: data.answers ?? {},
+    results: data.results ?? [],
+  };
 }
 
-export function saveQuizProgress(userId: string, subjectId: string, progress: SavedQuizProgress) {
-  localStorage.setItem(quizProgressKey(userId, subjectId), JSON.stringify(progress));
+export async function saveQuizProgress(
+  userId: string,
+  subjectId: string,
+  progress: SavedQuizProgress
+): Promise<void> {
+  await fetch(`${API_URL}/api/quiz-progress/${userId}/${subjectId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(progress),
+  });
 }
 
-export function clearQuizProgress(userId: string, subjectId: string) {
-  localStorage.removeItem(quizProgressKey(userId, subjectId));
+export async function clearQuizProgress(userId: string, subjectId: string): Promise<void> {
+  await fetch(`${API_URL}/api/quiz-progress/${userId}/${subjectId}`, { method: 'DELETE' });
 }

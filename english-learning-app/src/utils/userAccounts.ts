@@ -1,92 +1,62 @@
 import type { UserAccount } from '../types';
 
-const STORAGE_KEY = 'registeredUsers';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-export function getUsers(): UserAccount[] {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      const users: UserAccount[] = JSON.parse(saved);
-      // Accounts created before these fields existed are already in use; grandfather them in with safe defaults.
-      return users.map((u) => ({
-        ...u,
-        approved: u.approved ?? true,
-        email: u.email ?? '',
-        parentPassword: u.parentPassword ?? '',
-      }));
-    } catch {
-      return [];
-    }
-  }
-
-  // Migrate from the old single-account format, if present.
-  const legacy = localStorage.getItem('loginCredentials');
-  if (legacy) {
-    try {
-      const parsed = JSON.parse(legacy);
-      const migrated: UserAccount[] = [
-        {
-          id: `user_${Date.now()}`,
-          username: parsed.username,
-          password: parsed.password,
-          email: '',
-          parentPassword: '',
-          approved: true,
-        },
-      ];
-      saveUsers(migrated);
-      localStorage.removeItem('loginCredentials');
-      return migrated;
-    } catch {
-      return [];
-    }
-  }
-
-  return [];
+async function parseErrorOr(res: Response, fallback: string): Promise<never> {
+  const body = await res.json().catch(() => ({}));
+  throw new Error(body.error || fallback);
 }
 
-export function saveUsers(users: UserAccount[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+export async function getUsers(): Promise<UserAccount[]> {
+  const res = await fetch(`${API_URL}/api/users`);
+  if (!res.ok) return parseErrorOr(res, 'Erro ao buscar usuários');
+  return res.json();
 }
 
-export function addUser(
+export async function addUser(
   username: string,
   password: string,
   approved: boolean,
   email: string = '',
   parentPassword: string = ''
-): UserAccount[] {
-  const users = getUsers();
-  const newUser: UserAccount = {
-    id: `user_${Date.now()}`,
-    username,
-    password,
-    email,
-    parentPassword,
-    approved,
-  };
-  const updated = [...users, newUser];
-  saveUsers(updated);
-  return updated;
+): Promise<UserAccount> {
+  const res = await fetch(`${API_URL}/api/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, email, parentPassword, approved }),
+  });
+  if (!res.ok) return parseErrorOr(res, 'Erro ao criar usuário');
+  return res.json();
 }
 
-export function removeUser(id: string): UserAccount[] {
-  const updated = getUsers().filter((u) => u.id !== id);
-  saveUsers(updated);
-  return updated;
+export async function removeUser(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/users/${id}`, { method: 'DELETE' });
+  if (!res.ok) return parseErrorOr(res, 'Erro ao remover usuário');
 }
 
-export function approveUser(id: string): UserAccount[] {
-  const updated = getUsers().map((u) => (u.id === id ? { ...u, approved: true } : u));
-  saveUsers(updated);
-  return updated;
+export async function approveUser(id: string): Promise<UserAccount> {
+  const res = await fetch(`${API_URL}/api/users/${id}/approve`, { method: 'POST' });
+  if (!res.ok) return parseErrorOr(res, 'Erro ao aprovar usuário');
+  return res.json();
 }
 
-export function findUser(username: string, password: string): UserAccount | null {
-  return getUsers().find((u) => u.username === username && u.password === password) ?? null;
+export async function findUser(username: string, password: string): Promise<UserAccount | null> {
+  const res = await fetch(`${API_URL}/api/users/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) return null;
+  return res.json();
 }
 
-export function validateParentPassword(userId: string, password: string): boolean {
-  const user = getUsers().find((u) => u.id === userId);
-  return !!user?.parentPassword && user.parentPassword === password;
+export async function validateParentPassword(userId: string, password: string): Promise<boolean> {
+  const res = await fetch(`${API_URL}/api/users/${userId}/validate-parent-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) return false;
+  const data = await res.json();
+  return data.valid;
 }

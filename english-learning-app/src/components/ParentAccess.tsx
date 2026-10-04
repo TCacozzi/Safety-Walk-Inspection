@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Subject, UserAccount } from '../types';
 import { getUsers, addUser, removeUser, approveUser } from '../utils/userAccounts';
+import { validateAdminPasscode } from '../utils/adminPasscode';
 import { getQuizProgress } from '../utils/userProgress';
 import { sendAccountEmail } from '../utils/email';
 import '../styles/ParentAccess.css';
@@ -21,23 +22,38 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
   const [newEmail, setNewEmail] = useState('');
   const [newParentPassword, setNewParentPassword] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [answeredCounts, setAnsweredCounts] = useState<Record<string, number>>({});
 
-  const handleUnlock = () => {
-    const savedPasscode = localStorage.getItem('parentPasscode');
+  const refreshUsers = () => {
+    getUsers().then((loadedUsers) => {
+      setUsers(loadedUsers);
+      setSelectedUserId((current) => current || loadedUsers[0]?.id || '');
+    });
+  };
 
-    if (!savedPasscode) {
-      setError('Nenhuma senha configurada ainda. Acesse ⚙️ Configurações para criar uma senha de 6 números.');
+  useEffect(() => {
+    if (!selectedUserId) {
+      setAnsweredCounts({});
       return;
     }
 
-    if (passcodeInput === savedPasscode) {
+    Promise.all(
+      subjects.map((subject) =>
+        getQuizProgress(selectedUserId, subject.id).then((progress) => [subject.id, progress.results.length] as const)
+      )
+    ).then((entries) => {
+      setAnsweredCounts(Object.fromEntries(entries));
+    });
+  }, [selectedUserId, subjects]);
+
+  const handleUnlock = async () => {
+    const valid = await validateAdminPasscode(passcodeInput);
+    if (valid) {
       setUnlocked(true);
       setError('');
-      const loadedUsers = getUsers();
-      setUsers(loadedUsers);
-      setSelectedUserId(loadedUsers[0]?.id ?? '');
+      refreshUsers();
     } else {
-      setError('Senha incorreta. Tente novamente.');
+      setError('Senha incorreta, ou nenhuma senha foi configurada ainda (acesse ⚙️ Configurações para criar uma).');
     }
     setPasscodeInput('');
   };
@@ -51,7 +67,7 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
     }
   };
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (!newUsername.trim() || !newPassword) {
       alert('Preencha usuário e senha.');
       return;
@@ -60,39 +76,32 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
       alert('A senha dos pais deve ter exatamente 6 números.');
       return;
     }
-    if (users.some((u) => u.username === newUsername.trim())) {
-      alert('Já existe um usuário com esse nome.');
-      return;
-    }
 
-    const updated = addUser(
-      newUsername.trim(),
-      newPassword,
-      true,
-      newEmail.trim(),
-      newParentPassword
-    );
-    setUsers(updated);
-    setNewUsername('');
-    setNewPassword('');
-    setNewEmail('');
-    setNewParentPassword('');
+    try {
+      await addUser(newUsername.trim(), newPassword, true, newEmail.trim(), newParentPassword);
+      refreshUsers();
+      setNewUsername('');
+      setNewPassword('');
+      setNewEmail('');
+      setNewParentPassword('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao adicionar usuário.');
+    }
   };
 
-  const handleRemoveUser = (user: UserAccount) => {
+  const handleRemoveUser = async (user: UserAccount) => {
     if (confirm(`Remover o acesso de "${user.username}"? O perfil dele também será apagado.`)) {
-      const updated = removeUser(user.id);
-      localStorage.removeItem(`studentProfile_${user.id}`);
-      setUsers(updated);
+      await removeUser(user.id);
       if (selectedUserId === user.id) {
-        setSelectedUserId(updated[0]?.id ?? '');
+        setSelectedUserId('');
       }
+      refreshUsers();
     }
   };
 
-  const handleApproveUser = (user: UserAccount) => {
-    const updated = approveUser(user.id);
-    setUsers(updated);
+  const handleApproveUser = async (user: UserAccount) => {
+    await approveUser(user.id);
+    refreshUsers();
     sendAccountEmail(user.email, 'approved', user.username);
   };
 
@@ -194,63 +203,60 @@ export function ParentAccess({ subjects, onResetSubjectProgress, onClose }: Pare
                 </div>
               </section>
 
-            <section className="users-section">
-              <h3>📈 Progresso por Aluno</h3>
-              {users.length === 0 ? (
-                <p className="empty">Nenhum usuário cadastrado ainda</p>
-              ) : (
-                <>
-                  <div className="student-select">
-                    <label>Selecione o aluno:</label>
-                    <select
-                      value={selectedUserId}
-                      onChange={(e) => setSelectedUserId(e.target.value)}
-                    >
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.username}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <section className="users-section">
+                <h3>📈 Progresso por Aluno</h3>
+                {users.length === 0 ? (
+                  <p className="empty">Nenhum usuário cadastrado ainda</p>
+                ) : (
+                  <>
+                    <div className="student-select">
+                      <label>Selecione o aluno:</label>
+                      <select
+                        value={selectedUserId}
+                        onChange={(e) => setSelectedUserId(e.target.value)}
+                      >
+                        {users.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.username}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="reset-list">
-                    <p className="section-hint">
-                      Resetar uma matéria apaga as respostas e a pontuação desse aluno, para que ele comece do zero. Os exercícios gerados continuam salvos.
-                    </p>
-                    {subjects.length === 0 ? (
-                      <p className="empty">Nenhuma matéria cadastrada ainda</p>
-                    ) : (
-                      subjects.map((subject) => {
-                        const subjectProgress = selectedUserId
-                          ? getQuizProgress(selectedUserId, subject.id)
-                          : { results: [] };
-                        const answeredCount = subjectProgress.results.length;
+                    <div className="reset-list">
+                      <p className="section-hint">
+                        Resetar uma matéria apaga as respostas e a pontuação desse aluno, para que ele comece do zero. Os exercícios gerados continuam salvos.
+                      </p>
+                      {subjects.length === 0 ? (
+                        <p className="empty">Nenhuma matéria cadastrada ainda</p>
+                      ) : (
+                        subjects.map((subject) => {
+                          const answeredCount = answeredCounts[subject.id] ?? 0;
 
-                        return (
-                          <div key={subject.id} className="reset-item">
-                            <div className="subject-info">
-                              <h4>{subject.name}</h4>
-                              <p className="subject-status">
-                                {subject.enabled ? `${subject.questions.length} exercícios` : 'Sem conteúdo'}
-                                {answeredCount > 0 && ` • ${answeredCount} respondidas`}
-                              </p>
+                          return (
+                            <div key={subject.id} className="reset-item">
+                              <div className="subject-info">
+                                <h4>{subject.name}</h4>
+                                <p className="subject-status">
+                                  {subject.enabled ? `${subject.questions.length} exercícios` : 'Sem conteúdo'}
+                                  {answeredCount > 0 && ` • ${answeredCount} respondidas`}
+                                </p>
+                              </div>
+                              <button
+                                className="btn-reset"
+                                onClick={() => handleReset(subject)}
+                                disabled={!subject.enabled}
+                              >
+                                🔄 Resetar Progresso
+                              </button>
                             </div>
-                            <button
-                              className="btn-reset"
-                              onClick={() => handleReset(subject)}
-                              disabled={!subject.enabled}
-                            >
-                              🔄 Resetar Progresso
-                            </button>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </>
-              )}
-            </section>
+                          );
+                        })
+                      )}
+                    </div>
+                  </>
+                )}
+              </section>
             </>
           )}
         </div>

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Subject } from '../types';
+import { hasAdminPasscode, validateAdminPasscode, setAdminPasscode } from '../utils/adminPasscode';
 import '../styles/AdminPanel.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface AdminPanelProps {
   subjects: Subject[];
-  onAddSubject: (subject: Subject) => void;
+  onAddSubject: (name: string) => void;
   onDeleteSubject: (id: string) => void;
   onUpdateSubject: (subject: Subject) => void;
   onClose: () => void;
@@ -25,14 +26,25 @@ export function AdminPanel({
   const [referenceText, setReferenceText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [parentPasscode, setParentPasscode] = useState('');
+  const [passcodeConfigured, setPasscodeConfigured] = useState(false);
 
-  const [unlocked, setUnlocked] = useState(() => !localStorage.getItem('parentPasscode'));
+  const [unlocked, setUnlocked] = useState(false);
+  const [checkingLock, setCheckingLock] = useState(true);
   const [passcodeInput, setPasscodeInput] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
-  const handleUnlock = () => {
-    const savedPasscode = localStorage.getItem('parentPasscode');
-    if (passcodeInput === savedPasscode) {
+  useEffect(() => {
+    hasAdminPasscode()
+      .then((configured) => {
+        setPasscodeConfigured(configured);
+        setUnlocked(!configured);
+      })
+      .finally(() => setCheckingLock(false));
+  }, []);
+
+  const handleUnlock = async () => {
+    const valid = await validateAdminPasscode(passcodeInput);
+    if (valid) {
       setUnlocked(true);
       setPasscodeError('');
     } else {
@@ -51,14 +63,19 @@ export function AdminPanel({
     return JSON.parse(withoutFences.slice(start, end + 1));
   };
 
-  const handleSaveParentPasscode = () => {
+  const handleSaveParentPasscode = async () => {
     if (!/^\d{6}$/.test(parentPasscode)) {
       alert('A senha deve ter exatamente 6 números.');
       return;
     }
-    localStorage.setItem('parentPasscode', parentPasscode);
-    setParentPasscode('');
-    alert('Senha de Administrador salva com sucesso!');
+    try {
+      await setAdminPasscode(parentPasscode);
+      setParentPasscode('');
+      setPasscodeConfigured(true);
+      alert('Senha de Administrador salva com sucesso!');
+    } catch (error) {
+      alert(`Erro ao salvar senha: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
+    }
   };
 
   const handleAddSubject = () => {
@@ -67,15 +84,7 @@ export function AdminPanel({
       return;
     }
 
-    const newSubject: Subject = {
-      id: `subject_${Date.now()}`,
-      name: newSubjectName,
-      questions: [],
-      createdAt: new Date(),
-      enabled: false,
-    };
-
-    onAddSubject(newSubject);
+    onAddSubject(newSubjectName.trim());
     setNewSubjectName('');
   };
 
@@ -192,6 +201,10 @@ export function AdminPanel({
 
   const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
 
+  if (checkingLock) {
+    return null;
+  }
+
   if (!unlocked) {
     return (
       <div className="admin-panel-overlay">
@@ -257,7 +270,7 @@ export function AdminPanel({
                 Salvar Senha
               </button>
             </div>
-            {localStorage.getItem('parentPasscode') && (
+            {passcodeConfigured && (
               <p className="success">✅ Senha configurada</p>
             )}
           </section>

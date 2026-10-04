@@ -8,7 +8,9 @@ import { ResetMyProgress } from './components/ResetMyProgress';
 import { Login } from './components/Login';
 import { getUsers } from './utils/userAccounts';
 import { getUserProgress, saveUserProgress, clearQuizProgress } from './utils/userProgress';
-import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile } from './types';
+import { getSubjects, createSubject, updateSubject, deleteSubject } from './utils/subjects';
+import { getProfile, saveProfile } from './utils/profile';
+import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile, UserAccount } from './types';
 import './App.css';
 
 type Screen = 'admin' | 'selector' | 'lesson' | 'parent';
@@ -25,28 +27,47 @@ function App() {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showResetMyProgress, setShowResetMyProgress] = useState(false);
 
-  // Load subjects from localStorage
+  const refreshSubjects = () => {
+    getSubjects()
+      .then(setSubjects)
+      .catch((error) => console.error('Erro ao buscar matérias:', error));
+  };
+
+  // Load subjects from the server
   useEffect(() => {
-    const savedSubjects = localStorage.getItem('lorenzoDynamicSubjects');
-    if (savedSubjects) {
-      setSubjects(JSON.parse(savedSubjects));
-    }
+    refreshSubjects();
   }, []);
 
-  // Load the logged-in user's own profile and progress whenever the user changes
+  // Load the logged-in user's own profile, progress and account whenever the user changes
   useEffect(() => {
     if (!currentUserId) {
       setStudentProfile(null);
+      setProfileLoaded(true);
       setProgress(null);
+      setCurrentUser(null);
       return;
     }
 
-    const savedProfile = localStorage.getItem(`studentProfile_${currentUserId}`);
-    setStudentProfile(savedProfile ? JSON.parse(savedProfile) : null);
-    setProgress(getUserProgress(currentUserId));
+    setProfileLoaded(false);
+    getProfile(currentUserId)
+      .then((profile) => {
+        setStudentProfile(profile);
+        setProfileLoaded(true);
+      })
+      .catch(() => setProfileLoaded(true));
+
+    getUserProgress(currentUserId)
+      .then(setProgress)
+      .catch((error) => console.error('Erro ao buscar progresso:', error));
+
+    getUsers()
+      .then((users) => setCurrentUser(users.find((u) => u.id === currentUserId) ?? null))
+      .catch((error) => console.error('Erro ao buscar usuário:', error));
   }, [currentUserId]);
 
   // Sessions from before multi-user accounts existed may have isLoggedIn set
@@ -75,31 +96,33 @@ function App() {
   const handleSaveProfile = (profile: StudentProfile) => {
     if (!currentUserId) return;
     setStudentProfile(profile);
-    localStorage.setItem(`studentProfile_${currentUserId}`, JSON.stringify(profile));
+    saveProfile(currentUserId, profile).catch((error) =>
+      console.error('Erro ao salvar perfil:', error)
+    );
   };
 
-  const handleAddSubject = (subject: Subject) => {
-    const updated = [...subjects, subject];
-    setSubjects(updated);
-    localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(updated));
+  const handleAddSubject = (name: string) => {
+    createSubject(name)
+      .then(() => refreshSubjects())
+      .catch((error) => alert(`Erro ao criar matéria: ${error.message}`));
   };
 
   const handleDeleteSubject = (id: string) => {
-    const updated = subjects.filter((s) => s.id !== id);
-    setSubjects(updated);
-    localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(updated));
+    deleteSubject(id)
+      .then(() => refreshSubjects())
+      .catch((error) => alert(`Erro ao deletar matéria: ${error.message}`));
   };
 
   const handleUpdateSubject = (updated: Subject) => {
-    const newSubjects = subjects.map((s) => (s.id === updated.id ? updated : s));
-    setSubjects(newSubjects);
-    localStorage.setItem('lorenzoDynamicSubjects', JSON.stringify(newSubjects));
+    updateSubject(updated.id, updated)
+      .then(() => refreshSubjects())
+      .catch((error) => alert(`Erro ao atualizar matéria: ${error.message}`));
   };
 
-  const handleResetSubjectProgress = (userId: string, subjectId: string) => {
-    clearQuizProgress(userId, subjectId);
+  const handleResetSubjectProgress = async (userId: string, subjectId: string) => {
+    await clearQuizProgress(userId, subjectId);
 
-    const userProgress = getUserProgress(userId);
+    const userProgress = await getUserProgress(userId);
     const removedPoints = userProgress.subjectScores?.[subjectId] || 0;
     const updatedProgress: UserProgress = {
       ...userProgress,
@@ -109,7 +132,7 @@ function App() {
         [subjectId]: 0,
       },
     };
-    saveUserProgress(userId, updatedProgress);
+    await saveUserProgress(userId, updatedProgress);
 
     if (userId === currentUserId) {
       setProgress(updatedProgress);
@@ -117,8 +140,7 @@ function App() {
   };
 
   const handleSelectSubject = (subject: Subject) => {
-    const user = getUsers().find((u) => u.id === currentUserId);
-    if (!user?.approved) return;
+    if (!currentUser?.approved) return;
     setSelectedSubject(subject);
     setCurrentScreen('lesson');
   };
@@ -142,7 +164,9 @@ function App() {
     };
 
     setProgress(updatedProgress);
-    saveUserProgress(currentUserId, updatedProgress);
+    saveUserProgress(currentUserId, updatedProgress).catch((error) =>
+      console.error('Erro ao salvar progresso:', error)
+    );
     setCurrentScreen('selector');
   };
 
@@ -163,6 +187,10 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
+  if (!profileLoaded) {
+    return null;
+  }
+
   if (!studentProfile) {
     return (
       <StudentProfileSetup
@@ -174,7 +202,6 @@ function App() {
     );
   }
 
-  const currentUser = getUsers().find((u) => u.id === currentUserId);
   const isApproved = currentUser?.approved ?? false;
 
   return (

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import { Resend } from 'resend';
+import * as db from './db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -18,10 +19,30 @@ if (!RESEND_API_KEY) {
   console.warn('⚠️  RESEND_API_KEY não configurada. O envio de e-mails ficará desativado até você configurá-la.');
 }
 
+if (!db.dbEnabled) {
+  console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_KEY não configuradas. As rotas de dados (usuários, matérias, progresso) ficarão indisponíveis até você configurá-las.');
+}
+
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+function requireDb(req, res, next) {
+  if (!db.dbEnabled) {
+    return res.status(503).json({ error: 'Banco de dados não configurado no servidor (SUPABASE_URL / SUPABASE_SERVICE_KEY ausentes).' });
+  }
+  next();
+}
+
+function asyncHandler(fn) {
+  return (req, res) => {
+    fn(req, res).catch((error) => {
+      console.error('❌ Erro na rota:', error.message);
+      res.status(500).json({ error: 'Erro no servidor', details: error.message });
+    });
+  };
+}
 
 app.post('/api/generate-exercises', async (req, res) => {
   try {
@@ -201,6 +222,143 @@ app.post('/api/send-email', async (req, res) => {
     res.status(500).json({ error: 'Erro no servidor', details: error.message });
   }
 });
+
+// --- Users ---
+
+app.get('/api/users', requireDb, asyncHandler(async (req, res) => {
+  const users = await db.getUsers();
+  res.json(users);
+}));
+
+app.post('/api/users', requireDb, asyncHandler(async (req, res) => {
+  const { username, password, email, parentPassword, approved } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'username e password são obrigatórios' });
+  }
+  if (await db.usernameExists(username)) {
+    return res.status(409).json({ error: 'Já existe uma conta com esse usuário' });
+  }
+  const user = await db.createUser({
+    id: `user_${Date.now()}`,
+    username,
+    password,
+    email: email || '',
+    parentPassword: parentPassword || '',
+    approved: !!approved,
+  });
+  res.status(201).json(user);
+}));
+
+app.post('/api/users/login', requireDb, asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+  const user = await db.findUserByCredentials(username, password);
+  if (!user) {
+    return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+  }
+  res.json(user);
+}));
+
+app.post('/api/users/:id/approve', requireDb, asyncHandler(async (req, res) => {
+  const user = await db.approveUserById(req.params.id);
+  res.json(user);
+}));
+
+app.delete('/api/users/:id', requireDb, asyncHandler(async (req, res) => {
+  await db.removeUserById(req.params.id);
+  res.json({ removed: true });
+}));
+
+app.post('/api/users/:id/validate-parent-password', requireDb, asyncHandler(async (req, res) => {
+  const valid = await db.validateParentPasswordFor(req.params.id, req.body.password);
+  res.json({ valid });
+}));
+
+// --- Admin passcode ---
+
+app.get('/api/admin-passcode', requireDb, asyncHandler(async (req, res) => {
+  const status = await db.getAdminPasscodeStatus();
+  res.json(status);
+}));
+
+app.post('/api/admin-passcode/validate', requireDb, asyncHandler(async (req, res) => {
+  const result = await db.validateAdminPasscode(req.body.passcode);
+  res.json(result);
+}));
+
+app.post('/api/admin-passcode', requireDb, asyncHandler(async (req, res) => {
+  if (!/^\d{6}$/.test(req.body.passcode || '')) {
+    return res.status(400).json({ error: 'A senha deve ter exatamente 6 números' });
+  }
+  await db.setAdminPasscode(req.body.passcode);
+  res.json({ saved: true });
+}));
+
+// --- Subjects ---
+
+app.get('/api/subjects', requireDb, asyncHandler(async (req, res) => {
+  const subjects = await db.getSubjects();
+  res.json(subjects);
+}));
+
+app.post('/api/subjects', requireDb, asyncHandler(async (req, res) => {
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'name é obrigatório' });
+  }
+  const subject = await db.createSubject({ id: `subject_${Date.now()}`, name });
+  res.status(201).json(subject);
+}));
+
+app.put('/api/subjects/:id', requireDb, asyncHandler(async (req, res) => {
+  const subject = await db.updateSubjectById(req.params.id, req.body);
+  res.json(subject);
+}));
+
+app.delete('/api/subjects/:id', requireDb, asyncHandler(async (req, res) => {
+  await db.removeSubjectById(req.params.id);
+  res.json({ removed: true });
+}));
+
+// --- Student profile ---
+
+app.get('/api/profiles/:userId', requireDb, asyncHandler(async (req, res) => {
+  const profile = await db.getProfile(req.params.userId);
+  res.json(profile);
+}));
+
+app.put('/api/profiles/:userId', requireDb, asyncHandler(async (req, res) => {
+  await db.saveProfile(req.params.userId, req.body);
+  res.json({ saved: true });
+}));
+
+// --- User progress ---
+
+app.get('/api/progress/:userId', requireDb, asyncHandler(async (req, res) => {
+  const progress = await db.getProgress(req.params.userId);
+  res.json(progress);
+}));
+
+app.put('/api/progress/:userId', requireDb, asyncHandler(async (req, res) => {
+  await db.saveProgress(req.params.userId, req.body);
+  res.json({ saved: true });
+}));
+
+// --- Quiz progress ---
+
+app.get('/api/quiz-progress/:userId/:subjectId', requireDb, asyncHandler(async (req, res) => {
+  const progress = await db.getQuizProgress(req.params.userId, req.params.subjectId);
+  res.json(progress);
+}));
+
+app.put('/api/quiz-progress/:userId/:subjectId', requireDb, asyncHandler(async (req, res) => {
+  await db.saveQuizProgress(req.params.userId, req.params.subjectId, req.body);
+  res.json({ saved: true });
+}));
+
+app.delete('/api/quiz-progress/:userId/:subjectId', requireDb, asyncHandler(async (req, res) => {
+  await db.clearQuizProgress(req.params.userId, req.params.subjectId);
+  res.json({ removed: true });
+}));
 
 app.listen(PORT, () => {
   console.log(`\n✅ API Proxy rodando em http://localhost:${PORT}`);

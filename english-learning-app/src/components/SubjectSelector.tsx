@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { Subject } from '../types';
 import { getQuizProgress } from '../utils/userProgress';
 import '../styles/SubjectSelector.css';
@@ -11,6 +12,11 @@ interface SubjectSelectorProps {
   onParentClick: () => void;
 }
 
+interface SubjectProgressInfo {
+  answeredCount: number;
+  correctCount: number;
+}
+
 export function SubjectSelector({
   subjects,
   userId,
@@ -21,6 +27,23 @@ export function SubjectSelector({
 }: SubjectSelectorProps) {
   const enabledSubjects = subjects.filter((s) => s.enabled);
   const disabledSubjects = subjects.filter((s) => !s.enabled);
+
+  const [progressBySubject, setProgressBySubject] = useState<Record<string, SubjectProgressInfo>>({});
+
+  useEffect(() => {
+    Promise.all(
+      enabledSubjects.map((subject) =>
+        getQuizProgress(userId, subject.id).then((progress) => [
+          subject.id,
+          {
+            answeredCount: progress.results.length,
+            correctCount: progress.results.filter((r) => r.correct).length,
+          } satisfies SubjectProgressInfo,
+        ] as const)
+      )
+    ).then((entries) => setProgressBySubject(Object.fromEntries(entries)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, subjects]);
 
   return (
     <div className="subject-selector">
@@ -63,9 +86,9 @@ export function SubjectSelector({
                 <h3 className="section-title">📖 Matérias Disponíveis</h3>
                 <div className="grid">
                   {enabledSubjects.map((subject) => {
-                    const progress = getQuizProgress(userId, subject.id);
-                    const answeredCount = progress.results.length;
-                    const correctCount = progress.results.filter((r) => r.correct).length;
+                    const info = progressBySubject[subject.id];
+                    const answeredCount = info?.answeredCount ?? 0;
+                    const correctCount = info?.correctCount ?? 0;
                     const accuracyPercent =
                       answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
                     const inProgress = answeredCount > 0;

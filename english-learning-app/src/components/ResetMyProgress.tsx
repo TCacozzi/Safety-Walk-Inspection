@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Subject } from '../types';
 import { validateParentPassword } from '../utils/userAccounts';
 import { getQuizProgress } from '../utils/userProgress';
@@ -15,11 +15,24 @@ export function ResetMyProgress({ userId, subjects, onResetSubjectProgress, onCl
   const [passwordInput, setPasswordInput] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
+  const [answeredCounts, setAnsweredCounts] = useState<Record<string, number>>({});
 
   const enabledSubjects = subjects.filter((s) => s.enabled);
 
-  const handleUnlock = () => {
-    if (validateParentPassword(userId, passwordInput)) {
+  useEffect(() => {
+    if (!unlocked) return;
+
+    Promise.all(
+      enabledSubjects.map((subject) =>
+        getQuizProgress(userId, subject.id).then((progress) => [subject.id, progress.results.length] as const)
+      )
+    ).then((entries) => setAnsweredCounts(Object.fromEntries(entries)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked, userId]);
+
+  const handleUnlock = async () => {
+    const valid = await validateParentPassword(userId, passwordInput);
+    if (valid) {
       setUnlocked(true);
       setError('');
     } else {
@@ -74,8 +87,7 @@ export function ResetMyProgress({ userId, subjects, onResetSubjectProgress, onCl
                 <p className="empty">Nenhuma matéria disponível ainda</p>
               ) : (
                 enabledSubjects.map((subject) => {
-                  const progress = getQuizProgress(userId, subject.id);
-                  const answeredCount = progress.results.length;
+                  const answeredCount = answeredCounts[subject.id] ?? 0;
 
                   return (
                     <div key={subject.id} className="reset-item">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { findUser, getUsers, addUser } from '../utils/userAccounts';
+import { findUser, addUser } from '../utils/userAccounts';
 import { sendAccountEmail } from '../utils/email';
 import { AdminUsersPanel } from './AdminUsersPanel';
 import '../styles/Login.css';
@@ -18,8 +18,8 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  const handleLogin = () => {
-    const user = findUser(username.trim(), password);
+  const handleLogin = async () => {
+    const user = await findUser(username.trim(), password);
     if (user) {
       setError('');
       onLoginSuccess(user.id);
@@ -41,18 +41,15 @@ export function Login({ onLoginSuccess }: LoginProps) {
       setError('A senha dos pais deve ter exatamente 6 números.');
       return;
     }
-    if (getUsers().some((u) => u.username === username.trim())) {
-      setError('Já existe uma conta com esse usuário.');
-      return;
+
+    try {
+      const newUser = await addUser(username.trim(), password, false, email.trim(), parentPassword);
+      setError('');
+      sendAccountEmail(newUser.email, 'pending', newUser.username);
+      onLoginSuccess(newUser.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar conta.');
     }
-
-    const updated = addUser(username.trim(), password, false, email.trim(), parentPassword);
-    const newUser = updated[updated.length - 1];
-    setError('');
-
-    sendAccountEmail(newUser.email, 'pending', newUser.username);
-
-    onLoginSuccess(newUser.id);
   };
 
   const handleSubmit = (e: React.FormEvent) => {

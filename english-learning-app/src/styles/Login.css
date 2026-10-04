@@ -151,6 +151,13 @@
   text-decoration: underline;
 }
 
+.login-admin-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1rem;
+}
+
 .login-admin-link {
   background: none;
   border: none;
@@ -164,6 +171,29 @@
 .login-admin-link:hover {
   color: var(--primary);
   text-decoration: underline;
+}
+
+.login-divider {
+  width: 100%;
+  text-align: center;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0.5rem 0 -0.25rem;
+  position: relative;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  display: inline-block;
+  width: 2rem;
+  height: 1px;
+  background: var(--border);
+  vertical-align: middle;
+  margin: 0 0.75rem;
 }
 
 @media (max-width: 640px) {

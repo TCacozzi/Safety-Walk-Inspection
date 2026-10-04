@@ -1,24 +1,44 @@
 import { useState } from 'react';
+import type { Subject, StudentProfile } from '../types';
 import { findUser, addUser, requestPasswordReset } from '../utils/userAccounts';
+import { saveProfile } from '../utils/profile';
 import { sendAccountEmail } from '../utils/email';
+import { ProfileFields } from './ProfileFields';
 import { AdminUsersPanel } from './AdminUsersPanel';
+import { AdminPanel } from './AdminPanel';
+import { ParentAccess } from './ParentAccess';
 import '../styles/Login.css';
 
 interface LoginProps {
   onLoginSuccess: (userId: string) => void;
+  subjects: Subject[];
+  onAddSubject: (name: string) => void;
+  onDeleteSubject: (id: string) => void;
+  onUpdateSubject: (subject: Subject) => void;
+  onResetSubjectProgress: (userId: string, subjectId: string) => void;
 }
 
-export function Login({ onLoginSuccess }: LoginProps) {
+export function Login({
+  onLoginSuccess,
+  subjects,
+  onAddSubject,
+  onDeleteSubject,
+  onUpdateSubject,
+  onResetSubjectProgress,
+}: LoginProps) {
   const [mode, setMode] = useState<'login' | 'create' | 'forgot'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [parentPassword, setParentPassword] = useState('');
+  const [profile, setProfile] = useState<StudentProfile>({ name: '', grade: '', school: '', photo: '' });
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
   const [error, setError] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showSubjectsPanel, setShowSubjectsPanel] = useState(false);
+  const [showParentAccess, setShowParentAccess] = useState(false);
 
   const handleLogin = async () => {
     const user = await findUser(username.trim(), password);
@@ -43,9 +63,19 @@ export function Login({ onLoginSuccess }: LoginProps) {
       setError('A senha dos pais deve ter exatamente 6 números.');
       return;
     }
+    if (!profile.name.trim() || !profile.grade.trim() || !profile.school.trim()) {
+      setError('Preencha nome, ano e escola do aluno.');
+      return;
+    }
 
     try {
       const newUser = await addUser(username.trim(), password, false, email.trim(), parentPassword);
+      await saveProfile(newUser.id, {
+        name: profile.name.trim(),
+        grade: profile.grade.trim(),
+        school: profile.school.trim(),
+        photo: profile.photo,
+      });
       setError('');
       sendAccountEmail(newUser.email, 'pending', newUser.username);
       onLoginSuccess(newUser.id);
@@ -164,6 +194,20 @@ export function Login({ onLoginSuccess }: LoginProps) {
                   <p className="login-field-hint">
                     A senha dos pais serve para resetar o progresso deste aluno depois, sem precisar da senha do administrador.
                   </p>
+
+                  <div className="login-divider">Perfil do Aluno</div>
+
+                  <ProfileFields
+                    name={profile.name}
+                    grade={profile.grade}
+                    school={profile.school}
+                    photo={profile.photo}
+                    onNameChange={(name) => setProfile((p) => ({ ...p, name }))}
+                    onGradeChange={(grade) => setProfile((p) => ({ ...p, grade }))}
+                    onSchoolChange={(school) => setProfile((p) => ({ ...p, school }))}
+                    onPhotoChange={(photo) => setProfile((p) => ({ ...p, photo }))}
+                    idPrefix="login-create-account"
+                  />
                 </>
               )}
 
@@ -188,13 +232,39 @@ export function Login({ onLoginSuccess }: LoginProps) {
             {mode === 'create' || mode === 'forgot' ? 'Já tenho uma conta' : 'Criar uma nova conta'}
           </button>
 
-          <button className="login-admin-link" onClick={() => setShowAdminPanel(true)}>
-            🔐 Acesso Administrador
-          </button>
+          <div className="login-admin-links">
+            <button className="login-admin-link" onClick={() => setShowAdminPanel(true)}>
+              🔐 Acesso Administrador
+            </button>
+            <button className="login-admin-link" onClick={() => setShowSubjectsPanel(true)}>
+              ⚙️ Configurações
+            </button>
+            <button className="login-admin-link" onClick={() => setShowParentAccess(true)}>
+              🔒 Área dos Pais
+            </button>
+          </div>
         </div>
       </div>
 
       {showAdminPanel && <AdminUsersPanel onClose={() => setShowAdminPanel(false)} />}
+
+      {showSubjectsPanel && (
+        <AdminPanel
+          subjects={subjects}
+          onAddSubject={onAddSubject}
+          onDeleteSubject={onDeleteSubject}
+          onUpdateSubject={onUpdateSubject}
+          onClose={() => setShowSubjectsPanel(false)}
+        />
+      )}
+
+      {showParentAccess && (
+        <ParentAccess
+          subjects={subjects}
+          onResetSubjectProgress={onResetSubjectProgress}
+          onClose={() => setShowParentAccess(false)}
+        />
+      )}
     </div>
   );
 }

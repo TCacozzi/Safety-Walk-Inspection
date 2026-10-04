@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AdminPanel } from './components/AdminPanel';
 import { SubjectSelector } from './components/SubjectSelector';
 import { Lesson } from './components/Lesson';
-import { ParentAccess } from './components/ParentAccess';
 import { StudentProfileSetup } from './components/StudentProfileSetup';
 import { ResetMyProgress } from './components/ResetMyProgress';
 import { Login } from './components/Login';
@@ -14,7 +12,7 @@ import { getProfile, saveProfile } from './utils/profile';
 import type { Subject, UserProgress, ExerciseResult, Lesson as LessonType, StudentProfile, UserAccount } from './types';
 import './App.css';
 
-type Screen = 'admin' | 'selector' | 'lesson' | 'parent';
+type Screen = 'selector' | 'lesson';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -198,7 +196,16 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        subjects={subjects}
+        onAddSubject={handleAddSubject}
+        onDeleteSubject={handleDeleteSubject}
+        onUpdateSubject={handleUpdateSubject}
+        onResetSubjectProgress={handleResetSubjectProgress}
+      />
+    );
   }
 
   if (!profileLoaded) {
@@ -285,32 +292,12 @@ function App() {
       )}
 
       <main className="app-main">
-        {currentScreen === 'admin' && (
-          <AdminPanel
-            subjects={subjects}
-            onAddSubject={handleAddSubject}
-            onDeleteSubject={handleDeleteSubject}
-            onUpdateSubject={handleUpdateSubject}
-            onClose={() => setCurrentScreen('selector')}
-          />
-        )}
-
         {currentScreen === 'selector' && currentUserId && (
           <SubjectSelector
             subjects={subjects}
             userId={currentUserId}
             isApproved={isApproved}
             onSelectSubject={handleSelectSubject}
-            onAdminClick={() => setCurrentScreen('admin')}
-            onParentClick={() => setCurrentScreen('parent')}
-          />
-        )}
-
-        {currentScreen === 'parent' && (
-          <ParentAccess
-            subjects={subjects}
-            onResetSubjectProgress={handleResetSubjectProgress}
-            onClose={() => setCurrentScreen('selector')}
           />
         )}
 

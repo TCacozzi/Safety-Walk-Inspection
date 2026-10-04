@@ -71,3 +71,13 @@ grant all on all tables in schema public to anon, authenticated, service_role;
 grant all on all sequences in schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+
+-- Todo o controle de acesso (senha de administrador, aprovacao de usuario,
+-- senha dos pais) ja e feito pelo backend Express antes de chamar o banco,
+-- entao nao precisamos de Row Level Security aqui dentro do Postgres.
+alter table app_config disable row level security;
+alter table users disable row level security;
+alter table subjects disable row level security;
+alter table student_profiles disable row level security;
+alter table user_progress disable row level security;
+alter table quiz_progress disable row level security;

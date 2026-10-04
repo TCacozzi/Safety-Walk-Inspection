@@ -62,3 +62,12 @@ create table if not exists quiz_progress (
   results jsonb not null default '[]'::jsonb,
   primary key (user_id, subject_id)
 );
+
+-- Garante que a API (usada pelo backend com a chave secreta/service_role)
+-- tenha permissao de leitura e escrita nessas tabelas, incluindo tabelas
+-- futuras criadas do mesmo jeito.
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;

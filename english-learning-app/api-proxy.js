@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
@@ -10,8 +10,9 @@ import * as db from './db.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'Manda Bem! <onboarding@resend.dev>';
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const EMAIL_FROM = process.env.EMAIL_FROM || (GMAIL_USER ? `Manda Bem! <${GMAIL_USER}>` : undefined);
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 if (!ANTHROPIC_API_KEY) {
@@ -19,15 +20,21 @@ if (!ANTHROPIC_API_KEY) {
   process.exit(1);
 }
 
-if (!RESEND_API_KEY) {
-  console.warn('⚠️  RESEND_API_KEY não configurada. O envio de e-mails ficará desativado até você configurá-la.');
+if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+  console.warn('⚠️  GMAIL_USER / GMAIL_APP_PASSWORD não configuradas. O envio de e-mails ficará desativado até você configurá-las.');
 }
 
 if (!db.dbEnabled) {
   console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_KEY não configuradas. As rotas de dados (usuários, matérias, progresso) ficarão indisponíveis até você configurá-las.');
 }
 
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+const mailer =
+  GMAIL_USER && GMAIL_APP_PASSWORD
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+      })
+    : null;
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 const ExercisesSchema = z.object({
@@ -180,20 +187,15 @@ app.post('/api/send-email', async (req, res) => {
       return res.status(400).json({ error: `Tipo de e-mail inválido: ${type}` });
     }
 
-    if (!resend) {
-      console.warn(`⚠️  Envio de e-mail (${type}) ignorado: RESEND_API_KEY não configurada.`);
-      return res.json({ sent: false, reason: 'RESEND_API_KEY não configurada no servidor' });
+    if (!mailer) {
+      console.warn(`⚠️  Envio de e-mail (${type}) ignorado: GMAIL_USER / GMAIL_APP_PASSWORD não configuradas.`);
+      return res.json({ sent: false, reason: 'GMAIL_USER / GMAIL_APP_PASSWORD não configuradas no servidor' });
     }
 
     const { subject, html } = template(username);
-    const { error } = await resend.emails.send({
-      from: EMAIL_FROM,
-      to,
-      subject,
-      html,
-    });
-
-    if (error) {
+    try {
+      await mailer.sendMail({ from: EMAIL_FROM, to, subject, html });
+    } catch (error) {
       console.error('❌ Erro ao enviar e-mail:', error);
       return res.status(502).json({ sent: false, error: error.message });
     }
@@ -273,23 +275,24 @@ app.post('/api/users/forgot-password', requireDb, asyncHandler(async (req, res) 
 
   const user = await db.findUserByEmail(email);
   if (user) {
-    if (!resend) {
-      console.warn('⚠️  Pedido de redefinição de senha ignorado: RESEND_API_KEY não configurada.');
+    if (!mailer) {
+      console.warn('⚠️  Pedido de redefinição de senha ignorado: GMAIL_USER / GMAIL_APP_PASSWORD não configuradas.');
     } else {
       const token = await db.createPasswordResetToken(user.id);
       const resetLink = `${FRONTEND_URL}/?reset_token=${token}`;
-      const { error } = await resend.emails.send({
-        from: EMAIL_FROM,
-        to: email,
-        subject: 'Redefinir sua senha - Manda Bem!',
-        html: `
-          <h2>Olá, ${user.username}!</h2>
-          <p>Recebemos um pedido para redefinir a senha da sua conta no <strong>Manda Bem!</strong>.</p>
-          <p><a href="${resetLink}">Clique aqui para escolher uma nova senha</a></p>
-          <p>Esse link expira em 1 hora. Se você não pediu essa redefinição, pode ignorar este e-mail.</p>
-        `,
-      });
-      if (error) {
+      try {
+        await mailer.sendMail({
+          from: EMAIL_FROM,
+          to: email,
+          subject: 'Redefinir sua senha - Manda Bem!',
+          html: `
+            <h2>Olá, ${user.username}!</h2>
+            <p>Recebemos um pedido para redefinir a senha da sua conta no <strong>Manda Bem!</strong>.</p>
+            <p><a href="${resetLink}">Clique aqui para escolher uma nova senha</a></p>
+            <p>Esse link expira em 1 hora. Se você não pediu essa redefinição, pode ignorar este e-mail.</p>
+          `,
+        });
+      } catch (error) {
         console.error('❌ Erro ao enviar e-mail de redefinição:', error);
       }
     }

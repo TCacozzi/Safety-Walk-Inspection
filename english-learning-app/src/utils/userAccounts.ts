@@ -60,3 +60,21 @@ export async function validateParentPassword(userId: string, password: string): 
   const data = await res.json();
   return data.valid;
 }
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/users/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) return parseErrorOr(res, 'Erro ao solicitar redefinição de senha');
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/users/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+  });
+  if (!res.ok) return parseErrorOr(res, 'Erro ao redefinir senha');
+}

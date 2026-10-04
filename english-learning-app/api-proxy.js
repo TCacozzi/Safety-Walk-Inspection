@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3001;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'Manda Bem! <onboarding@resend.dev>';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 if (!ANTHROPIC_API_KEY) {
   console.error('❌ ANTHROPIC_API_KEY não configurada. Crie um arquivo .env com ANTHROPIC_API_KEY=sk-ant-...');
@@ -271,6 +272,56 @@ app.delete('/api/users/:id', requireDb, asyncHandler(async (req, res) => {
 app.post('/api/users/:id/validate-parent-password', requireDb, asyncHandler(async (req, res) => {
   const valid = await db.validateParentPasswordFor(req.params.id, req.body.password);
   res.json({ valid });
+}));
+
+app.post('/api/users/forgot-password', requireDb, asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'email é obrigatório' });
+  }
+
+  const user = await db.findUserByEmail(email);
+  if (user) {
+    if (!resend) {
+      console.warn('⚠️  Pedido de redefinição de senha ignorado: RESEND_API_KEY não configurada.');
+    } else {
+      const token = await db.createPasswordResetToken(user.id);
+      const resetLink = `${FRONTEND_URL}/?reset_token=${token}`;
+      const { error } = await resend.emails.send({
+        from: EMAIL_FROM,
+        to: email,
+        subject: 'Redefinir sua senha - Manda Bem!',
+        html: `
+          <h2>Olá, ${user.username}!</h2>
+          <p>Recebemos um pedido para redefinir a senha da sua conta no <strong>Manda Bem!</strong>.</p>
+          <p><a href="${resetLink}">Clique aqui para escolher uma nova senha</a></p>
+          <p>Esse link expira em 1 hora. Se você não pediu essa redefinição, pode ignorar este e-mail.</p>
+        `,
+      });
+      if (error) {
+        console.error('❌ Erro ao enviar e-mail de redefinição:', error);
+      }
+    }
+  }
+
+  // Sempre responde com a mesma mensagem, exista ou não o e-mail cadastrado,
+  // para não revelar quais contas existem no sistema.
+  res.json({ ok: true });
+}));
+
+app.post('/api/users/reset-password', requireDb, asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'token e newPassword são obrigatórios' });
+  }
+
+  const result = await db.consumePasswordResetToken(token);
+  if (!result) {
+    return res.status(400).json({ error: 'Link inválido ou expirado. Peça um novo e-mail de redefinição.' });
+  }
+
+  await db.updateUserPassword(result.userId, newPassword);
+  res.json({ ok: true });
 }));
 
 // --- Admin passcode ---

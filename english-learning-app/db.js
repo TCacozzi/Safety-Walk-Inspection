@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { randomBytes } from 'node:crypto';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -76,6 +77,17 @@ export async function usernameExists(username) {
   const { data, error } = await supabase.from('users').select('id').eq('username', username).maybeSingle();
   if (error) throw error;
   return !!data;
+}
+
+export async function findUserByEmail(email) {
+  const { data, error } = await supabase.from('users').select('*').eq('email', email).maybeSingle();
+  if (error) throw error;
+  return rowToUser(data);
+}
+
+export async function updateUserPassword(userId, password) {
+  const { error } = await supabase.from('users').update({ password }).eq('id', userId);
+  if (error) throw error;
 }
 
 export async function approveUserById(id) {
@@ -239,4 +251,37 @@ export async function saveQuizProgress(userId, subjectId, progress) {
 export async function clearQuizProgress(userId, subjectId) {
   const { error } = await supabase.from('quiz_progress').delete().eq('user_id', userId).eq('subject_id', subjectId);
   if (error) throw error;
+}
+
+// --- Password reset tokens ---
+
+export async function createPasswordResetToken(userId) {
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+  await supabase.from('password_reset_tokens').delete().eq('user_id', userId);
+  const { error } = await supabase
+    .from('password_reset_tokens')
+    .insert({ token, user_id: userId, expires_at: expiresAt });
+  if (error) throw error;
+
+  return token;
+}
+
+export async function consumePasswordResetToken(token) {
+  const { data, error } = await supabase
+    .from('password_reset_tokens')
+    .select('*')
+    .eq('token', token)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  await supabase.from('password_reset_tokens').delete().eq('token', token);
+
+  if (new Date(data.expires_at).getTime() < Date.now()) {
+    return null;
+  }
+
+  return { userId: data.user_id };
 }

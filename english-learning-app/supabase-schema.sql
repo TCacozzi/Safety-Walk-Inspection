@@ -63,6 +63,14 @@ create table if not exists quiz_progress (
   primary key (user_id, subject_id)
 );
 
+-- Tokens de "esqueci minha senha" (expiram depois de 1 hora)
+create table if not exists password_reset_tokens (
+  token text primary key,
+  user_id text not null references users(id) on delete cascade,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
 -- Garante que a API (usada pelo backend com a chave secreta/service_role)
 -- tenha permissao de leitura e escrita nessas tabelas, incluindo tabelas
 -- futuras criadas do mesmo jeito.
@@ -81,3 +89,4 @@ alter table subjects disable row level security;
 alter table student_profiles disable row level security;
 alter table user_progress disable row level security;
 alter table quiz_progress disable row level security;
+alter table password_reset_tokens disable row level security;

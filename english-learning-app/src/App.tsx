@@ -6,6 +6,7 @@ import { ParentAccess } from './components/ParentAccess';
 import { StudentProfileSetup } from './components/StudentProfileSetup';
 import { ResetMyProgress } from './components/ResetMyProgress';
 import { Login } from './components/Login';
+import { ResetPassword } from './components/ResetPassword';
 import { getUsers } from './utils/userAccounts';
 import { getUserProgress, saveUserProgress, clearQuizProgress } from './utils/userProgress';
 import { getSubjects, createSubject, updateSubject, deleteSubject } from './utils/subjects';
@@ -182,6 +183,19 @@ function App() {
       questions: subject.questions,
     };
   };
+
+  const resetToken = new URLSearchParams(window.location.search).get('reset_token');
+  if (resetToken) {
+    return (
+      <ResetPassword
+        token={resetToken}
+        onDone={() => {
+          window.history.replaceState({}, '', window.location.pathname);
+          window.location.reload();
+        }}
+      />
+    );
+  }
 
   if (!isAuthenticated) {
     return <Login onLoginSuccess={handleLoginSuccess} />;

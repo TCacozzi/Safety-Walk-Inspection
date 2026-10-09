@@ -108,6 +108,7 @@
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
   background: var(--bg);
+  color: var(--text);
 }
 
 .success {
@@ -136,6 +137,7 @@
   border-radius: 0.5rem;
   font-size: 1rem;
   background: var(--bg);
+  color: var(--text);
 }
 
 .btn-primary {

@@ -39,7 +39,13 @@ const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 const ExercisesSchema = z.object({
   summary: z.string(),
-  topics: z.array(z.string()),
+  topics: z.array(
+    z.object({
+      topic: z.string(),
+      explanation: z.string(),
+      examples: z.array(z.string()),
+    })
+  ),
   questions: z.array(
     z.object({
       id: z.string(),
@@ -79,10 +85,10 @@ app.post('/api/generate-exercises', async (req, res) => {
 
     console.log('📥 Requisição recebida');
 
-    const instructions = 'Você é um professor de inglês preparando uma prova de revisão para um aluno. Leia e entenda cuidadosamente TODO o conteúdo fornecido (é uma prova/material de inglês) antes de criar as perguntas.\n\n' +
-      'Gere NO MÍNIMO 30 exercícios de múltipla escolha, todos diretamente correlacionados ao conteúdo fornecido (vocabulário, gramática, textos, diálogos, exercícios que aparecem no material). Não invente temas que não estejam no material. Varie o foco das perguntas (vocabulário, gramática, compreensão de texto, tradução) sempre com base no que está no conteúdo.\n\n';
+    const instructions = 'Você é um professor preparando um guia de estudos e uma prova de revisão para um aluno, com base no conteúdo escolar fornecido (pode ser de qualquer matéria: inglês, geografia, matemática, história, ciências, etc). Leia e entenda cuidadosamente TODO o conteúdo fornecido antes de criar o guia e as perguntas.\n\n' +
+      'Gere NO MÍNIMO 30 exercícios de múltipla escolha, todos diretamente correlacionados ao conteúdo fornecido (conceitos, vocabulário, fórmulas, textos, diálogos, exercícios que aparecem no material). Não invente temas que não estejam no material. Varie o foco das perguntas sempre com base no que está no conteúdo.\n\n';
 
-    const fieldGuide = 'O campo "summary" é um resumo geral e curto do material, em português. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material, em português, cada item combinando o nome do tema com uma breve explicação do que será cobrado sobre ele (ex: "Verbo TO BE no presente: usar am/is/are com os pronomes corretos"). O campo "type" de cada pergunta deve ser sempre EXATAMENTE a string "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra gramatical, vocabulário ou trecho do texto relacionado àquela pergunta especifica. O campo "explanation" é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas.';
+    const fieldGuide = 'O campo "summary" é um parágrafo de introdução ao guia de estudos, em português (4 a 6 frases), explicando de forma acolhedora o que o material aborda no geral e o que o aluno vai aprender revisando esse conteúdo. O campo "topics" é uma lista (4 a 10 itens) dos temas/assuntos que aparecem no material; cada item tem três campos: "topic" (nome curto do tema, em português, ex: "Verbo TO BE no presente"), "explanation" (1 a 2 frases, em português, explicando o que precisa ser entendido/estudado sobre esse tema) e "examples" (2 a 3 exemplos concretos e práticos de como esse tema é usado — frases de exemplo, fórmulas aplicadas a um caso, situações do dia a dia — adequados à matéria do conteúdo, para o aluno estudar e entender a aplicação antes de começar os exercícios). O campo "type" de cada pergunta deve ser sempre EXATAMENTE a string "multiple-choice". O campo "context" é um texto curto (1 a 3 frases) mostrado ANTES da pergunta, explicando a regra ou conceito relacionado àquela pergunta específica. O campo "explanation" (dentro de cada pergunta) é mostrado DEPOIS que o aluno responde, justificando a resposta correta. O campo "answer" deve ser EXATAMENTE igual a uma das strings em "options". Gere no mínimo 30 perguntas.';
 
     const messages = [];
 

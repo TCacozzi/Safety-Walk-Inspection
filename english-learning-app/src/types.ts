@@ -9,13 +9,19 @@ export interface Question {
   points: number;
 }
 
+export interface StudyTopic {
+  topic: string;
+  explanation: string;
+  examples: string[];
+}
+
 export interface Subject {
   id: string;
   name: string;
   description?: string;
   content?: string;
   summary?: string;
-  topics?: string[];
+  topics?: (string | StudyTopic)[];
   questions: Question[];
   createdAt: Date;
   enabled: boolean;
@@ -28,7 +34,7 @@ export interface Lesson {
   description: string;
   content: string;
   summary?: string;
-  topics?: string[];
+  topics?: (string | StudyTopic)[];
   questions: Question[];
 }
 

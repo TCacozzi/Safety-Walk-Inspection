@@ -75,12 +75,32 @@ export const Lesson: React.FC<LessonProps> = ({
       {(lesson.summary || (lesson.topics && lesson.topics.length > 0)) && (
         <div className="lesson-content">
           {lesson.summary && <p className="lesson-summary">{lesson.summary}</p>}
-          {lesson.topics && lesson.topics.length > 0 && <h3>Temas que vamos estudar:</h3>}
-          <ul>
-            {lesson.topics?.map((topic, index) => (
-              <li key={index}>{topic}</li>
-            ))}
-          </ul>
+          {lesson.topics && lesson.topics.length > 0 && (
+            <>
+              <h3>Temas que vamos estudar:</h3>
+              <div className="topics-list">
+                {lesson.topics.map((topic, index) =>
+                  typeof topic === 'string' ? (
+                    <p key={index} className="topic-card-simple">
+                      {topic}
+                    </p>
+                  ) : (
+                    <div key={index} className="topic-card">
+                      <h4>{topic.topic}</h4>
+                      <p className="topic-explanation">{topic.explanation}</p>
+                      {topic.examples && topic.examples.length > 0 && (
+                        <ul className="topic-examples">
+                          {topic.examples.map((example, exampleIndex) => (
+                            <li key={exampleIndex}>{example}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 

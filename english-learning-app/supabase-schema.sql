@@ -83,32 +83,20 @@ alter default privileges in schema public grant all on tables to service_role;
 alter default privileges in schema public grant all on sequences to service_role;
 
 -- Todo o controle de acesso (senha de administrador, aprovacao de usuario,
--- senha dos pais) ja e feito pelo backend Express antes de chamar o banco,
--- mas o Row Level Security precisa ficar ATIVO para que a API publica do
--- Supabase nao exponha essas tabelas para qualquer pessoa com a chave
--- publica do projeto. Em vez de desativar o RLS, criamos uma unica regra
--- que libera acesso total apenas para a chave secreta do backend
--- (service_role) - e nega tudo mais por padrao.
-alter table app_config enable row level security;
-alter table users enable row level security;
-alter table subjects enable row level security;
-alter table student_profiles enable row level security;
-alter table user_progress enable row level security;
-alter table quiz_progress enable row level security;
-alter table password_reset_tokens enable row level security;
-
-drop policy if exists "service_role_full_access" on app_config;
-drop policy if exists "service_role_full_access" on users;
-drop policy if exists "service_role_full_access" on subjects;
-drop policy if exists "service_role_full_access" on student_profiles;
-drop policy if exists "service_role_full_access" on user_progress;
-drop policy if exists "service_role_full_access" on quiz_progress;
-drop policy if exists "service_role_full_access" on password_reset_tokens;
-
-create policy "service_role_full_access" on app_config for all to service_role using (true) with check (true);
-create policy "service_role_full_access" on users for all to service_role using (true) with check (true);
-create policy "service_role_full_access" on subjects for all to service_role using (true) with check (true);
-create policy "service_role_full_access" on student_profiles for all to service_role using (true) with check (true);
-create policy "service_role_full_access" on user_progress for all to service_role using (true) with check (true);
-create policy "service_role_full_access" on quiz_progress for all to service_role using (true) with check (true);
-create policy "service_role_full_access" on password_reset_tokens for all to service_role using (true) with check (true);
+-- senha dos pais) ja e feito pelo backend Express antes de chamar o banco.
+-- Tentamos manter o RLS ativo com uma policy explicita para service_role,
+-- mas nesse projeto Supabase isso bloqueou as proprias chamadas do backend
+-- (aparentemente as requests com a chave secreta nao chegam ao Postgres
+-- como a role "service_role" de fato, entao a policy nunca bate). Como os
+-- grants de anon/authenticated acima ja foram revogados - e sao eles que
+-- controlam o que a API publica do Supabase consegue tocar, antes mesmo de
+-- chegar nas regras de RLS - desativar o RLS aqui nao reabre a brecha
+-- original: sem nenhum grant, anon/authenticated nao conseguem ler nem
+-- escrever nada nessas tabelas de qualquer jeito.
+alter table app_config disable row level security;
+alter table users disable row level security;
+alter table subjects disable row level security;
+alter table student_profiles disable row level security;
+alter table user_progress disable row level security;
+alter table quiz_progress disable row level security;
+alter table password_reset_tokens disable row level security;

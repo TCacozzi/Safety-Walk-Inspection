@@ -73,20 +73,42 @@ create table if not exists password_reset_tokens (
 
 -- Garante que a API (usada pelo backend com a chave secreta/service_role)
 -- tenha permissao de leitura e escrita nessas tabelas, incluindo tabelas
--- futuras criadas do mesmo jeito.
-grant usage on schema public to anon, authenticated, service_role;
-grant all on all tables in schema public to anon, authenticated, service_role;
-grant all on all sequences in schema public to anon, authenticated, service_role;
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+-- futuras criadas do mesmo jeito. anon/authenticated nao precisam de nada:
+-- o frontend nunca fala com o Supabase diretamente, so atraves do backend.
+revoke all on all tables in schema public from anon, authenticated;
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+alter default privileges in schema public grant all on tables to service_role;
+alter default privileges in schema public grant all on sequences to service_role;
 
 -- Todo o controle de acesso (senha de administrador, aprovacao de usuario,
 -- senha dos pais) ja e feito pelo backend Express antes de chamar o banco,
--- entao nao precisamos de Row Level Security aqui dentro do Postgres.
-alter table app_config disable row level security;
-alter table users disable row level security;
-alter table subjects disable row level security;
-alter table student_profiles disable row level security;
-alter table user_progress disable row level security;
-alter table quiz_progress disable row level security;
-alter table password_reset_tokens disable row level security;
+-- mas o Row Level Security precisa ficar ATIVO para que a API publica do
+-- Supabase nao exponha essas tabelas para qualquer pessoa com a chave
+-- publica do projeto. Em vez de desativar o RLS, criamos uma unica regra
+-- que libera acesso total apenas para a chave secreta do backend
+-- (service_role) - e nega tudo mais por padrao.
+alter table app_config enable row level security;
+alter table users enable row level security;
+alter table subjects enable row level security;
+alter table student_profiles enable row level security;
+alter table user_progress enable row level security;
+alter table quiz_progress enable row level security;
+alter table password_reset_tokens enable row level security;
+
+drop policy if exists "service_role_full_access" on app_config;
+drop policy if exists "service_role_full_access" on users;
+drop policy if exists "service_role_full_access" on subjects;
+drop policy if exists "service_role_full_access" on student_profiles;
+drop policy if exists "service_role_full_access" on user_progress;
+drop policy if exists "service_role_full_access" on quiz_progress;
+drop policy if exists "service_role_full_access" on password_reset_tokens;
+
+create policy "service_role_full_access" on app_config for all to service_role using (true) with check (true);
+create policy "service_role_full_access" on users for all to service_role using (true) with check (true);
+create policy "service_role_full_access" on subjects for all to service_role using (true) with check (true);
+create policy "service_role_full_access" on student_profiles for all to service_role using (true) with check (true);
+create policy "service_role_full_access" on user_progress for all to service_role using (true) with check (true);
+create policy "service_role_full_access" on quiz_progress for all to service_role using (true) with check (true);
+create policy "service_role_full_access" on password_reset_tokens for all to service_role using (true) with check (true);
